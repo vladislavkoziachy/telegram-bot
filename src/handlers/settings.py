@@ -4,8 +4,10 @@ from aiogram.fsm.context import FSMContext
 from typing import Callable
 
 from src.database import get_user, update_user, create_user
-from src.keyboards.reply import get_main_menu, get_settings_menu, get_lang_selection_keyboard, get_back_button
+from src.keyboards.reply import get_main_menu, get_settings_menu, get_lang_selection_keyboard
 from src.states import LanguageStates
+from src.database import update_user_lang, get_user
+from src.services.i18n import get_all_translated
 
 router = Router()
 
@@ -21,16 +23,15 @@ LANGS_LEARNING = [
     ("es", "Español 🇪🇸")
 ]
 
-@router.message(F.text == "⚙️ Настройки") # This might need a better trigger or i18n trigger
-@router.message(F.text.in_(["⚙️ Настройки", "⚙️ Налаштування", "⚙️ Ustawienia"]))
-async def btn_settings(message: Message, _: Callable, user_lang: str, learn_lang: str):
-    text = _("settings_text", int_lang=user_lang.upper(), learn_lang=learn_lang.upper())
-    await message.answer(text, reply_markup=get_settings_menu(_))
 
-@router.message(F.text.in_(["Сменить язык интерфейса", "Змінити мову інтерфейсу", "Zmień język interfejsu"]))
+@router.message(F.text.in_(get_all_translated("menu_settings")))
+async def btn_settings(message: Message, _: Callable, user_lang: str, learn_lang: str):
+    await message.answer(_("menu_settings") + f"\n\nМова інтерфейсу: {user_lang.upper()}\nМова навчання: {learn_lang.upper()}", reply_markup=get_settings_menu(_))
+
+@router.message(F.text.in_(get_all_translated("change_interface")))
 async def btn_change_interface(message: Message, state: FSMContext, _: Callable):
     await state.set_state(LanguageStates.waiting_for_interface_lang)
-    await message.answer(_("welcome_interface"), reply_markup=get_lang_selection_keyboard(LANGS_INTERFACE))
+    await message.answer(_("select_interface_lang"), reply_markup=get_lang_selection_keyboard(LANGS_INTERFACE))
 
 @router.message(LanguageStates.waiting_for_interface_lang)
 async def process_interface_lang(message: Message, state: FSMContext, _: Callable):
@@ -61,7 +62,7 @@ async def process_interface_lang(message: Message, state: FSMContext, _: Callabl
     await state.set_state(LanguageStates.waiting_for_learning_lang)
     await message.answer(new_text("welcome_learning"), reply_markup=get_lang_selection_keyboard(LANGS_LEARNING))
 
-@router.message(F.text.in_(["Сменить язык обучения", "Змінити мову навчання", "Zmień język nauki"]))
+@router.message(F.text.in_(get_all_translated("change_learning")))
 async def btn_change_learning(message: Message, state: FSMContext, _: Callable):
     await state.set_state(LanguageStates.waiting_for_learning_lang)
     await message.answer(_("welcome_learning"), reply_markup=get_lang_selection_keyboard(LANGS_LEARNING))

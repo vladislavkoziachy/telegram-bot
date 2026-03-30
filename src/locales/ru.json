@@ -23,5 +23,14 @@
     "learned_action": "Выучил",
     "delete_action": "Удалить",
     "btn_back_list": "⬅️ Назад к списку",
-    "unlearn_action": "Вернуть в словарь"
+    "unlearn_action": "Вернуть в словарь",
+    "menu_text_translation": "📝 Перевод текста",
+    "menu_photo_translation": "📸 Перевод по фото (Скоро)",
+    "menu_choose_translation": "🎯 Выбери перевод",
+    "training_learn_native": "Обуч. ➔ Родной",
+    "training_native_learn": "Родной ➔ Обуч.",
+    "training_mix": "Вперемешку",
+    "menu_stats_all": "Показать все выученные слова ({total})",
+    "menu_stats_week": "Выученные за последнюю неделю ({week})",
+    "menu_stats_today": "Выученные за сегодняшний день ({today})"
 }

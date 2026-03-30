@@ -26,9 +26,9 @@ def get_learned_menu(_: Callable, total: int, week: int, today: int) -> ReplyKey
     # Key remains technical, but display depends on counts
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=f"Показать все выученные слова ({total})")], # These specifically are complex, might need better i18n
-            [KeyboardButton(text=f"Выученные за последнюю неделю ({week})")],
-            [KeyboardButton(text=f"Выученные за сегодняшний день ({today})")],
+            [KeyboardButton(text=_("menu_stats_all", total=total))],
+            [KeyboardButton(text=_("menu_stats_week", week=week))],
+            [KeyboardButton(text=_("menu_stats_today", today=today))],
             [KeyboardButton(text=_("btn_back"))]
         ],
         resize_keyboard=True
@@ -37,7 +37,7 @@ def get_learned_menu(_: Callable, total: int, week: int, today: int) -> ReplyKey
 def get_training_menu(_: Callable) -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="🎯 Выбери перевод")], # TODO: translate this key too
+            [KeyboardButton(text=_("menu_choose_translation"))],
             [KeyboardButton(text=_("btn_back"))]
         ],
         resize_keyboard=True
@@ -55,8 +55,8 @@ def get_source_menu(_: Callable) -> ReplyKeyboardMarkup:
 def get_mode_menu(_: Callable) -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="EN → RU"), KeyboardButton(text="RU → EN")],
-            [KeyboardButton(text="MIX"), KeyboardButton(text=_("btn_back"))]
+            [KeyboardButton(text=_("training_learn_native")), KeyboardButton(text=_("training_native_learn"))],
+            [KeyboardButton(text=_("training_mix")), KeyboardButton(text=_("btn_back"))]
         ],
         resize_keyboard=True
     )
@@ -80,8 +80,8 @@ def get_back_button(_: Callable) -> ReplyKeyboardMarkup:
 def get_translator_menu(_: Callable) -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="📝 Перевод текста")],
-            [KeyboardButton(text="📸 Перевод по фото (Скоро)")],
+            [KeyboardButton(text=_("menu_text_translation"))],
+            [KeyboardButton(text=_("menu_photo_translation"))],
             [KeyboardButton(text=_("btn_back"))]
         ],
         resize_keyboard=True

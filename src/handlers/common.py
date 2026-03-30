@@ -8,6 +8,7 @@ from src.services.translator import translate_word, FLAGS
 from src.keyboards.inline import get_add_word_keyboard
 from src.database import get_user, create_user
 from src.states import LanguageStates
+from src.services.i18n import get_all_translated
 from typing import Callable
 
 router = Router()
@@ -42,7 +43,17 @@ async def translate_any_text(message: Message, state: FSMContext, _: Callable, u
         return # Let other handlers deal with it
         
     text = message.text
-    if text.startswith("/") or text in ["➕ Добавить слово", "📖 Мой словарь", "🎯 Тренировка", "📚 Выученные", "🌐 Переводчик", "⚙️ Настройки"]:
+    
+    ignored_texts = (
+        get_all_translated("menu_add_word") +
+        get_all_translated("menu_my_dictionary") +
+        get_all_translated("menu_training") +
+        get_all_translated("menu_learned") +
+        get_all_translated("menu_translator") +
+        get_all_translated("menu_settings")
+    )
+    
+    if text.startswith("/") or text in ignored_texts:
         return # Should have been caught by other routers, but just in case
         
     # Also ignore texts from other languages if we had them in a list, 

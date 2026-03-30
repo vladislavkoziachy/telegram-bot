@@ -9,12 +9,13 @@ from src.keyboards.reply import get_main_menu
 from src.states import AddingWordStates
 from src.services.translator import translate_word, FLAGS
 from src.services.tts import generate_audio
+from src.services.i18n import get_all_translated
 from aiogram.types import FSInputFile
 import os
 
 router = Router()
 
-@router.message(F.text.in_(["➕ Добавить слово", "➕ Додати слово", "➕ Dodaj słowo"]))
+@router.message(F.text.in_(get_all_translated("menu_add_word")))
 async def btn_add_word(message: Message, state: FSMContext, _: Callable):
     from src.keyboards.reply import get_back_button
     await state.set_state(AddingWordStates.waiting_for_word)
@@ -70,7 +71,7 @@ async def show_dictionary_page(message_or_cb, user_id: int, learn_lang: str, sta
     else:
         await message_or_cb.message.edit_text(text, reply_markup=keyboard)
 
-@router.message(F.text.in_(["📖 Мой словарь", "📖 Мій словник", "📖 Mój słownik"]))
+@router.message(F.text.in_(get_all_translated("menu_my_dictionary")))
 async def btn_dictionary(message: Message, _: Callable, learn_lang: str):
     await show_dictionary_page(message, message.from_user.id, learn_lang, 'learning', 0, "dic", _("menu_my_dictionary"), _, per_page=10)
 
@@ -79,7 +80,7 @@ async def cb_dic_page(callback: CallbackQuery, _: Callable, learn_lang: str):
     page = int(callback.data.split(":")[1])
     await show_dictionary_page(callback, callback.from_user.id, learn_lang, 'learning', page, "dic", _("menu_my_dictionary"), _, per_page=10)
 
-@router.message(F.text.in_(["📚 Выученные", "📚 Вивчені", "📚 Wyuczone"]))
+@router.message(F.text.in_(get_all_translated("menu_learned")))
 async def btn_learned_menu_trigger(message: Message, _: Callable, learn_lang: str):
     from src.database import count_words
     from datetime import datetime, timedelta

@@ -23,5 +23,14 @@
     "learned_action": "Вивчив",
     "delete_action": "Видалити",
     "btn_back_list": "⬅️ Назад до списку",
-    "unlearn_action": "Повернути до словника"
+    "unlearn_action": "Повернути до словника",
+    "menu_text_translation": "📝 Переклад тексту",
+    "menu_photo_translation": "📸 Переклад по фото (Скоро)",
+    "menu_choose_translation": "🎯 Вибери переклад",
+    "training_learn_native": "Навч. ➔ Рідна",
+    "training_native_learn": "Рідна ➔ Навч.",
+    "training_mix": "Упереміш",
+    "menu_stats_all": "Показати всі вивчені слова ({total})",
+    "menu_stats_week": "Вивчені за останній тиждень ({week})",
+    "menu_stats_today": "Вивчені за сьогоднішній день ({today})"
 }

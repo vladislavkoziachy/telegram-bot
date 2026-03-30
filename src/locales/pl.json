@@ -23,5 +23,14 @@
     "learned_action": "Nauczyłem się",
     "delete_action": "Usuń",
     "btn_back_list": "⬅️ Powrót do listy",
-    "unlearn_action": "Przywróć do słownika"
+    "unlearn_action": "Przywróć do słownika",
+    "menu_text_translation": "📝 Tłumaczenie tekstu",
+    "menu_photo_translation": "📸 Tłumaczenie ze zdjęcia (Wkrótce)",
+    "menu_choose_translation": "🎯 Wybierz tłumaczenie",
+    "training_learn_native": "Ojc. ➔ Doc.",
+    "training_native_learn": "Doc. ➔ Ojc.",
+    "training_mix": "Mieszany",
+    "menu_stats_all": "Pokaż wszystkie wyuczone słowa ({total})",
+    "menu_stats_week": "Wyuczone w ostatnim tygodniu ({week})",
+    "menu_stats_today": "Wyuczone dzisiaj ({today})"
 }

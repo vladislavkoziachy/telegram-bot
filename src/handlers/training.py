@@ -7,33 +7,42 @@ from typing import Callable
 from src.database import get_words
 from src.keyboards.reply import get_training_menu, get_mode_menu, get_quiz_keyboard, get_main_menu
 from src.states import TrainingStates
+from src.services.i18n import get_all_translated
 
 router = Router()
 
-@router.message(F.text.in_(["🎯 Тренировка", "🎯 Тренування", "🎯 Trening"]))
+@router.message(F.text.in_(get_all_translated("menu_training")))
 async def btn_training(message: Message, _: Callable):
     await message.answer(_("menu_training"), reply_markup=get_training_menu(_))
 
-@router.message(F.text == "🎯 Выбери перевод") # TODO: i18n
+@router.message(F.text.in_(get_all_translated("menu_choose_translation")))
 async def btn_choose_translation(message: Message, _: Callable):
     from src.keyboards.reply import get_source_menu
     await message.answer(_("welcome_learning"), reply_markup=get_source_menu(_))
 
-@router.message(F.text.in_(["📖 Учить новые слова", "📖 Мій словник", "📖 Mój słownik", "📚 Выученные", "📚 Вивчені", "📚 Wyuczone"]))
+@router.message(F.text.in_(get_all_translated("menu_my_dictionary") + get_all_translated("menu_learned")))
 async def btn_choose_source(message: Message, state: FSMContext, _: Callable):
     # Mapping back to internal status
     text = message.text
     source = "learning"
-    if text in ["📚 Выученные", "📚 Вивчені", "📚 Wyuczone"]:
+    if text in get_all_translated("menu_learned"):
         source = "learned"
         
     await state.update_data(source=source)
     await message.answer(_("welcome_learning"), reply_markup=get_mode_menu(_))
 
-@router.message(F.text.in_(["EN → RU", "RU → EN", "MIX"]))
+@router.message(F.text.in_(get_all_translated("training_learn_native") + get_all_translated("training_native_learn") + get_all_translated("training_mix")))
 async def start_quiz_mode(message: Message, state: FSMContext, _: Callable):
     await state.set_state(TrainingStates.waiting_for_answer)
-    await state.update_data(mode=message.text)
+    
+    if message.text in get_all_translated("training_learn_native"):
+        normalized = "learn_native"
+    elif message.text in get_all_translated("training_native_learn"):
+        normalized = "native_learn"
+    else:
+        normalized = "mix"
+        
+    await state.update_data(mode=normalized)
     await send_quiz(message, state, _)
 
 async def send_quiz(message: Message, state: FSMContext, _: Callable):
@@ -58,10 +67,10 @@ async def send_quiz(message: Message, state: FSMContext, _: Callable):
     correct_word = random.choice(words)
     
     current_mode = mode
-    if mode == "MIX":
-        current_mode = random.choice(["EN → RU", "RU → EN"])
+    if mode == "mix":
+        current_mode = random.choice(["learn_native", "native_learn"])
         
-    if current_mode == "EN → RU":
+    if current_mode == "learn_native":
         question = correct_word.word
         correct_answer = correct_word.translation
         options_pool = [w.translation for w in words if w.id != correct_word.id]
@@ -88,7 +97,7 @@ async def send_quiz(message: Message, state: FSMContext, _: Callable):
 @router.message(TrainingStates.waiting_for_answer, F.text)
 async def process_quiz_answer(message: Message, state: FSMContext, _: Callable, learn_lang: str):
     text = message.text
-    if text in ["🛑 Окончить тренировку", "🛑 Завершить тренировку", "⬅️ Назад", "⬅️ Назад", "⬅️ Взад", "⬅️ Wstecz"]:
+    if text in get_all_translated("btn_back") + ["🛑 Окончить тренировку", "🛑 Завершить тренировку"]:
         await state.clear()
         await message.answer(_("main_menu_text"), reply_markup=get_main_menu(_))
         return
