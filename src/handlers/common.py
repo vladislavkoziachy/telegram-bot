@@ -4,7 +4,7 @@ from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
 from src.keyboards.reply import get_main_menu, get_lang_selection_keyboard
-from src.services.translator import translate_word
+from src.services.translator import translate_word, FLAGS
 from src.keyboards.inline import get_add_word_keyboard
 from src.database import get_user, create_user
 from src.states import LanguageStates
@@ -36,7 +36,7 @@ async def btn_back(message: Message, state: FSMContext, _: Callable):
 
 # Fallback for translating random text sent in the main menu
 @router.message(F.text)
-async def translate_any_text(message: Message, state: FSMContext, _: Callable, learn_lang: str):
+async def translate_any_text(message: Message, state: FSMContext, _: Callable, user_lang: str, learn_lang: str):
     current_state = await state.get_state()
     if current_state is not None:
         return # Let other handlers deal with it
@@ -48,6 +48,8 @@ async def translate_any_text(message: Message, state: FSMContext, _: Callable, l
     # Also ignore texts from other languages if we had them in a list, 
     # but for now we'll just try to translate
     
-    en, ru = translate_word(text, target_lang=learn_lang)
-    keyboard = get_add_word_keyboard(_, en, ru)
-    await message.answer(f"🇬🇧 {en} \n🇷🇺 {ru}", reply_markup=keyboard)
+    word_learn, word_native = translate_word(text, user_lang=user_lang, learn_lang=learn_lang)
+    keyboard = get_add_word_keyboard(_, word_learn, word_native)
+    flag_learn = FLAGS.get(learn_lang, "")
+    flag_native = FLAGS.get(user_lang, "")
+    await message.answer(f"{flag_learn} {word_learn} \n{flag_native} {word_native}", reply_markup=keyboard)

@@ -2,10 +2,10 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from typing import Callable
 
-def get_add_word_keyboard(_: Callable, en: str, ru: str) -> InlineKeyboardMarkup:
+def get_add_word_keyboard(_: Callable, word_learn: str, word_native: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔊 " + _("pronunciation", default="Произношение"), callback_data=f"voice:{en}")],
-        [InlineKeyboardButton(text="➕ " + _("add_to_dictionary", default="Добавить в словарь"), callback_data=f"add:{en}:{ru}")]
+        [InlineKeyboardButton(text="🔊 " + _("pronunciation", default="Произношение"), callback_data=f"voice:{word_learn}")],
+        [InlineKeyboardButton(text="➕ " + _("add_to_dictionary", default="Добавить в словарь"), callback_data=f"add:{word_learn}:{word_native}")]
     ])
 
 def get_dictionary_keyboard(_: Callable, words: list, page: int = 0, per_page: int = 10, prefix="dic") -> InlineKeyboardMarkup:

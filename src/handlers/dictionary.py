@@ -7,7 +7,7 @@ from src.database import add_word, get_words, update_word_status, delete_word
 from src.keyboards.inline import get_dictionary_keyboard, get_word_action_keyboard, get_add_word_keyboard
 from src.keyboards.reply import get_main_menu
 from src.states import AddingWordStates
-from src.services.translator import translate_word
+from src.services.translator import translate_word, FLAGS
 from src.services.tts import generate_audio
 from aiogram.types import FSInputFile
 import os
@@ -21,30 +21,32 @@ async def btn_add_word(message: Message, state: FSMContext, _: Callable):
     await message.answer(_("welcome_word_add", default="Напиши слово на английском или русском ✍️"), reply_markup=get_back_button(_))
 
 @router.message(AddingWordStates.waiting_for_word, F.text)
-async def process_word_to_add(message: Message, state: FSMContext, _: Callable, learn_lang: str):
+async def process_word_to_add(message: Message, state: FSMContext, _: Callable, user_lang: str, learn_lang: str):
     text = message.text
     if text in ["⬅️ Назад", "⬅️ Взад", "⬅️ Wstecz"]:
         await state.clear()
         await message.answer(_("main_menu_text"), reply_markup=get_main_menu(_))
         return
 
-    en, ru = translate_word(text, target_lang=learn_lang)
-    keyboard = get_add_word_keyboard(_, en, ru)
-    await message.answer(f"🇬🇧 {en} \n🇷🇺 {ru}", reply_markup=keyboard)
+    word_learn, word_native = translate_word(text, user_lang=user_lang, learn_lang=learn_lang)
+    keyboard = get_add_word_keyboard(_, word_learn, word_native)
+    flag_learn = FLAGS.get(learn_lang, "")
+    flag_native = FLAGS.get(user_lang, "")
+    await message.answer(f"{flag_learn} {word_learn} \n{flag_native} {word_native}", reply_markup=keyboard)
     
 @router.callback_query(F.data.startswith("add:"))
 async def cb_add_word(callback: CallbackQuery, state: FSMContext, learn_lang: str):
     parts = callback.data.split(":")
-    en = parts[1]
-    ru = parts[2]
+    word_learn = parts[1]
+    word_native = parts[2]
     user_id = callback.from_user.id
     
-    added = await add_word(user_id, en, ru, learn_lang)
+    added = await add_word(user_id, word_learn, word_native, learn_lang)
     if not added:
         await callback.answer("⚠️", show_alert=True)
         return
         
-    await callback.message.edit_text(f"✅ {en} — {ru}")
+    await callback.message.edit_text(f"✅ {word_learn} — {word_native}")
     await state.clear()
 
 async def show_dictionary_page(message_or_cb, user_id: int, learn_lang: str, status: str, page: int, prefix: str, title: str, _: Callable, since=None, per_page: int=20):

@@ -1,25 +1,22 @@
 from deep_translator import GoogleTranslator
 
-def translate_word(word: str, target_lang: str = 'en') -> tuple[str, str]:
-    """Returns (en_word, ru_word) or (word, translation) depending on learning language"""
-    try:
-        # Simple detection: if contains cyrillic, it's likely the native language (RU/UK)
-        # We want to translate TO the learning language (target_lang)
-        if any("\u0400" <= c <= "\u04FF" or c.lower() == 'ё' for c in word):
-            source = 'auto'
-            target = target_lang
-            translated = GoogleTranslator(source=source, target=target).translate(word)
-            return translated.capitalize(), word.capitalize()
-        else:
-            # If not cyrillic, it's likely the learning language or something else
-            # We translate TO 'ru' (or user's interface lang, but for now 'ru' as a bridge is common)
-            # Better: translate to 'ru' if it's the interface lang. 
-            # For simplicity, we assume if it's not native, it's the learning language.
-            source = target_lang
-            target = 'ru'
-            translated = GoogleTranslator(source=source, target=target).translate(word)
-            return word.capitalize(), translated.capitalize()
+FLAGS = {
+    "en": "🇬🇧",
+    "ru": "🇷🇺",
+    "uk": "🇺🇦",
+    "pl": "🇵🇱",
+    "es": "🇪🇸"
+}
 
+def translate_word(word: str, user_lang: str, learn_lang: str) -> tuple[str, str]:
+    """Returns (word_in_learning_lang, word_in_interface_lang)"""
+    try:
+        # We translate the input to BOTH learning language and interface language.
+        # This completely avoids guessing the source language via alphabets.
+        word_learn = GoogleTranslator(source='auto', target=learn_lang).translate(word)
+        word_native = GoogleTranslator(source='auto', target=user_lang).translate(word)
+        
+        return word_learn.capitalize(), word_native.capitalize()
     except Exception:
         return word.capitalize(), "Error"
 
