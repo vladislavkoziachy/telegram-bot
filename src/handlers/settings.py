@@ -41,10 +41,18 @@ async def process_interface_lang(message: Message, state: FSMContext, _: Callabl
             break
     
     if not lang_code:
-        await message.answer("Пожалуйста, выберите язык из списка / Будь ласка, виберіть мову зі списку / Proszę wybrać język z listy")
+        await message.answer(
+            "🇷🇺 Пожалуйста, выберите язык из списка:\n"
+            "🇺🇦 Будь ласка, виберіть мову зі списку:\n"
+            "🇵🇱 Proszę wybrać język z listy:"
+        )
         return
 
-    await update_user(message.from_user.id, interface_lang=lang_code)
+    user = await get_user(message.from_user.id)
+    if not user:
+        await create_user(message.from_user.id, interface_lang=lang_code)
+    else:
+        await update_user(message.from_user.id, interface_lang=lang_code)
     
     # We need to refresh the "_" function with the new language for the next message
     from src.services.i18n import _ as get_text_new

@@ -19,8 +19,12 @@ async def cmd_start(message: Message, state: FSMContext, _: Callable):
     if not user:
         from src.handlers.settings import LANGS_INTERFACE
         await state.set_state(LanguageStates.waiting_for_interface_lang)
-        await message.answer("Выберите язык интерфейса / Виберіть мову інтерфейсу / Wybierz język interfejsu:", 
-                             reply_markup=get_lang_selection_keyboard(LANGS_INTERFACE))
+        await message.answer(
+            "🇷🇺 Выберите язык интерфейса:\n"
+            "🇺🇦 Виберіть мову інтерфейсу:\n"
+            "🇵🇱 Wybierz język interfejsu:", 
+            reply_markup=get_lang_selection_keyboard(LANGS_INTERFACE)
+        )
         return
 
     await message.answer(_("main_menu_text"), reply_markup=get_main_menu(_))
