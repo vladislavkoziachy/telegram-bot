@@ -6,7 +6,6 @@ from typing import Callable
 from src.database import get_user, update_user, create_user
 from src.keyboards.reply import get_main_menu, get_settings_menu, get_lang_selection_keyboard
 from src.states import LanguageStates
-from src.database import update_user_lang, get_user
 from src.services.i18n import get_all_translated
 
 router = Router()
