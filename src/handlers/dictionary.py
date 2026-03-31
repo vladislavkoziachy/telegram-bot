@@ -1,3 +1,4 @@
+import logging
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
@@ -12,6 +13,9 @@ from aiogram.types import FSInputFile
 import os
 
 router = Router()
+logger = logging.getLogger(__name__)
+
+MAIN_MENU_BUTTONS = ["➕ Добавить слово", "📖 Мой словарь", "🎯 Тренировка", "📚 Выученные", "🌐 Переводчик", "⚙️ Настройки"]
 
 @router.message(F.text == "➕ Добавить слово")
 async def btn_add_word(message: Message, state: FSMContext):
@@ -21,9 +25,23 @@ async def btn_add_word(message: Message, state: FSMContext):
 @router.message(AddingWordStates.waiting_for_word, F.text)
 async def process_word_to_add(message: Message, state: FSMContext):
     text = message.text
+    logger.info(f"User {message.from_user.id} in AddingWordStates: {text}")
+    
     if text == "⬅️ Назад":
         await state.clear()
         await message.answer("Главное меню 👇", reply_markup=get_main_menu())
+        return
+
+    # If user clicks another menu button, clear state and don't translate
+    if text in MAIN_MENU_BUTTONS:
+        await state.clear()
+        # We return False or just let other handlers catch it by not returning? 
+        # In aiogram, we can't easily "fall through" from a state handler to a non-state handler in the same router easily if it matched.
+        # But we can manually call the handler or just tell them we switched. 
+        # Better: just tell them we are back in main menu and they should click again, or clear and return so common.py doesnt catch it.
+        # Actually, if we clear state here, and the router continues? No, it won't.
+        # Let's just state that we cancelled and show the menu.
+        await message.answer("Ввод слова отменен. Переходим в другой раздел... 🔄")
         return
 
     word_learn, word_native = translate_word(text)
@@ -32,6 +50,7 @@ async def process_word_to_add(message: Message, state: FSMContext):
     
 @router.callback_query(F.data.startswith("add:"))
 async def cb_add_word(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
     parts = callback.data.split(":")
     word_learn = parts[1]
     word_native = parts[2]
@@ -73,6 +92,7 @@ async def btn_dictionary(message: Message):
 
 @router.callback_query(F.data.startswith("dic_page:"))
 async def cb_dic_page(callback: CallbackQuery):
+    await callback.answer()
     page = int(callback.data.split(":")[1])
     await show_dictionary_page(callback, callback.from_user.id, 'learning', page, "dic", "📖 Мой словарь", per_page=20)
 
@@ -106,6 +126,7 @@ async def btn_show_today_learned(message: Message):
 
 @router.callback_query(F.data.startswith("word:"))
 async def cb_word_action(callback: CallbackQuery):
+    await callback.answer()
     parts = callback.data.split(":")
     prefix = parts[1]
     word = parts[2]
@@ -188,5 +209,6 @@ async def cb_delete_word(callback: CallbackQuery):
 
 @router.callback_query(F.data.startswith("back_list:"))
 async def cb_back_list(callback: CallbackQuery):
+    await callback.answer()
     prefix = callback.data.split(":")[1]
     await return_to_list(callback, callback.from_user.id, prefix)

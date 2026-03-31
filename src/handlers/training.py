@@ -1,4 +1,5 @@
 import random
+import logging
 from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
@@ -8,9 +9,13 @@ from src.keyboards.reply import get_training_menu, get_mode_menu, get_quiz_keybo
 from src.states import TrainingStates
 
 router = Router()
+logger = logging.getLogger(__name__)
+
+MAIN_MENU_BUTTONS = ["➕ Добавить слово", "📖 Мой словарь", "🎯 Тренировка", "📚 Выученные", "🌐 Переводчик", "⚙️ Настройки"]
 
 @router.message(F.text == "🎯 Тренировка")
 async def btn_training(message: Message, state: FSMContext):
+    await state.clear()
     await message.answer("Выбери тренировку:", reply_markup=get_training_menu())
 
 @router.message(F.text == "🧩 Выбери перевод")
@@ -21,9 +26,16 @@ async def btn_choose_translation(message: Message, state: FSMContext):
 @router.message(TrainingStates.waiting_for_source, F.text)
 async def process_source_selection(message: Message, state: FSMContext):
     text = message.text
+    logger.info(f"User {message.from_user.id} in TrainingStates waiting_for_source: {text}")
+    
     if text == "⬅️ Назад":
         await state.clear()
         await message.answer("Главное меню 👇", reply_markup=get_main_menu())
+        return
+
+    if text in MAIN_MENU_BUTTONS:
+        await state.clear()
+        await message.answer("Тренировка отменена. Переходим в другой раздел... 🔄")
         return
 
     source = "learning"
@@ -40,9 +52,16 @@ async def process_source_selection(message: Message, state: FSMContext):
 @router.message(TrainingStates.waiting_for_direction, F.text)
 async def process_direction_selection(message: Message, state: FSMContext):
     text = message.text
+    logger.info(f"User {message.from_user.id} in TrainingStates waiting_for_direction: {text}")
+
     if text == "⬅️ Назад":
         await state.clear()
         await message.answer("Главное меню 👇", reply_markup=get_main_menu())
+        return
+
+    if text in MAIN_MENU_BUTTONS:
+        await state.clear()
+        await message.answer("Тренировка отменена. Переходим в другой раздел... 🔄")
         return
 
     normalized = None
