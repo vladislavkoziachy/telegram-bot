@@ -35,5 +35,7 @@
     "welcome_word_add": "Napisz słowo w języku docelowym lub ojczystym ✍️",
     "choose_dictionary": "Z jakiego słownika będziemy się uczyć?",
     "choose_mode": "W jakim trybie będziemy trenować?",
-    "empty_dictionary": "Pusto 😢"
+    "empty_dictionary": "Pusto 😢",
+    "translator_prompt": "Proszę, wyślij tekst do przetłumaczenia... ✍️",
+    "select_interface_lang": "Wybierz język interfejsu:"
 }

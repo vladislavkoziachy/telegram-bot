@@ -36,5 +36,7 @@
     "welcome_word_add": "Напиши слово на изучаемом или родном языке ✍️",
     "choose_dictionary": "Из какого словаря будем учить?",
     "choose_mode": "В каком режиме будем тренироваться?",
-    "empty_dictionary": "Пусто 😢"
+    "empty_dictionary": "Пусто 😢",
+    "translator_prompt": "Пожалуйста, отправьте текст для перевода... ✍️",
+    "select_interface_lang": "Выберите язык интерфейса:"
 }

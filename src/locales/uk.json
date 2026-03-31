@@ -35,5 +35,7 @@
     "welcome_word_add": "Напиши слово вивченою або рідною мовою ✍️",
     "choose_dictionary": "З якого словника будемо вчити?",
     "choose_mode": "В якому режимі будемо тренуватися?",
-    "empty_dictionary": "Порожньо 😢"
+    "empty_dictionary": "Порожньо 😢",
+    "translator_prompt": "Будь ласка, надішліть текст для перекладу... ✍️",
+    "select_interface_lang": "Виберіть мову інтерфейсу:"
 }

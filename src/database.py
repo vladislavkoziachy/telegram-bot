@@ -37,6 +37,12 @@ class Word(Base):
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Attempt to add learned_at column if it's missing from previous DB versions
+        from sqlalchemy import text
+        try:
+            await conn.execute(text("ALTER TABLE words ADD COLUMN learned_at DATETIME;"))
+        except Exception:
+            pass
 
 # User Helpers
 async def get_user(user_id: int) -> User | None:
