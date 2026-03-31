@@ -1,3 +1,5 @@
+from aiogram import Router, types, F
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from src.keyboards.reply import get_main_menu
 from src.keyboards.inline import get_learned_menu
