@@ -3,12 +3,70 @@ from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from src.database.instance import async_session
-from src.database.actions import add_word, get_user_words
+from src.database.actions import add_word, get_user_words, get_word_by_id, delete_word, update_word_status
 from src.services.translator import translate_text
-from src.keyboards.inline import get_add_word_confirm_kb, get_word_manage_kb
+from src.keyboards.inline import get_add_word_confirm_kb, get_word_manage_kb, get_words_list_kb
 from src.states import AddWord
 
 router = Router()
+
+# Показ списка "Мой словарь"
+@router.message(F.text == "📖 Мой словарь")
+async def show_dictionary(message: types.Message):
+    async with async_session() as session:
+        words = await get_user_words(session, message.from_user.id, "learning")
+    
+    if not words:
+        await message.answer("📖 В вашем словаре пока нет слов. \nЧтобы добавить слово, просто напишите его мне!")
+        return
+
+    await message.answer(
+        "📖 Ваша библиотека слов (в процессе изучения). \nНажмите на слово, чтобы управлять им:",
+        reply_markup=get_words_list_kb(words)
+    )
+
+# Показ меню управления конкретным словом
+@router.callback_query(F.data.startswith("manage_word_"))
+async def manage_word(callback: types.CallbackQuery):
+    word_id = int(callback.data.split("_")[-1])
+    async with async_session() as session:
+        word = await get_word_by_id(session, word_id)
+    
+    if not word:
+        await callback.answer("Слово не найдено!")
+        return
+    
+    await callback.message.edit_text(
+        f"Управление словом: <b>{word.original_text}</b> — <b>{word.translated_text}</b>",
+        reply_markup=get_word_manage_kb(word.id, word.status)
+    )
+    await callback.answer()
+
+# Изменение статуса (Выучил / Вернуть)
+@router.callback_query(F.data.startswith("set_"))
+async def change_status(callback: types.CallbackQuery):
+    # data: set_learned_ID или set_learning_ID
+    parts = callback.data.split("_")
+    new_status = parts[1]
+    word_id = int(parts[2])
+    
+    async with async_session() as session:
+        await update_word_status(session, word_id, new_status)
+    
+    status_msg = "✅ Перенесено в 'Выученные'" if new_status == "learned" else "📖 Возвращено в 'Словарь'"
+    await callback.message.edit_text(status_msg)
+    await callback.answer()
+
+# Удаление слова
+@router.callback_query(F.data.startswith("delete_word_"))
+async def handle_delete(callback: types.CallbackQuery):
+    word_id = int(callback.data.split("_")[-1])
+    
+    async with async_session() as session:
+        await delete_word(session, word_id)
+    
+    await callback.message.edit_text("🗑 Слово удалено из вашего словаря.")
+    await callback.answer()
 
 # Обработка любого текста — если бот в режиме "Добавить слово"
 @router.message(AddWord.waiting_for_word)

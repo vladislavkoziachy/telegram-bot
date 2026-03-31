@@ -33,8 +33,25 @@ async def get_words_count(session: AsyncSession, user_id: int, status: str, days
     result = await session.execute(query)
     return result.scalar()
 
-async def get_user_words(session: AsyncSession, user_id: int, status: str):
-    result = await session.execute(
-        select(Word).where(Word.user_id == user_id, Word.status == status)
-    )
+async def get_user_words(session: AsyncSession, user_id: int, status: str, days: int = None):
+    query = select(Word).where(Word.user_id == user_id, Word.status == status)
+    if days is not None:
+        since = datetime.utcnow() - timedelta(days=days)
+        query = query.where(Word.created_at >= since)
+    
+    result = await session.execute(query)
     return result.scalars().all()
+
+async def delete_word(session: AsyncSession, word_id: int):
+    await session.execute(delete(Word).where(Word.id == word_id))
+    await session.commit()
+
+async def update_word_status(session: AsyncSession, word_id: int, new_status: str):
+    await session.execute(
+        update(Word).where(Word.id == word_id).values(status=new_status)
+    )
+    await session.commit()
+
+async def get_word_by_id(session: AsyncSession, word_id: int):
+    result = await session.execute(select(Word).where(Word.id == word_id))
+    return result.scalar_one_or_none()

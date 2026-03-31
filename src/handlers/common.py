@@ -3,8 +3,9 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
 from src.database.instance import async_session
-from src.database.actions import get_or_create_user, get_words_count
+from src.database.actions import get_or_create_user, get_words_count, get_user_words
 from src.keyboards.reply import get_main_menu, get_learned_menu
+from src.keyboards.inline import get_words_list_kb
 from src.states import AddWord
 
 router = Router()
@@ -39,6 +40,39 @@ async def show_learned_menu(message: types.Message):
         }
     
     await message.answer("Раздел выученных слов:", reply_markup=get_learned_menu(counts))
+
+@router.message(F.text.startswith("📅 Выучено за сегодня"))
+async def show_learned_today(message: types.Message):
+    async with async_session() as session:
+        words = await get_user_words(session, message.from_user.id, "learned", days=1)
+    
+    if not words:
+        await message.answer("В этой категории пока пусто.")
+        return
+    
+    await message.answer("Слова, закрепленные сегодня:", reply_markup=get_words_list_kb(words))
+
+@router.message(F.text.startswith("📅 Выучено за неделю"))
+async def show_learned_week(message: types.Message):
+    async with async_session() as session:
+        words = await get_user_words(session, message.from_user.id, "learned", days=7)
+    
+    if not words:
+        await message.answer("В этой категории пока пусто.")
+        return
+    
+    await message.answer("Слова, закрепленные за неделю:", reply_markup=get_words_list_kb(words))
+
+@router.message(F.text.startswith("📅 Выучено за всё время"))
+async def show_learned_all(message: types.Message):
+    async with async_session() as session:
+        words = await get_user_words(session, message.from_user.id, "learned")
+    
+    if not words:
+        await message.answer("В этой категории пока пусто.")
+        return
+    
+    await message.answer("Ваш список триумфа!", reply_markup=get_words_list_kb(words))
 
 @router.message(F.text == "⬅️ Назад в меню")
 async def back_to_main(message: types.Message):
