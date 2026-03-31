@@ -12,6 +12,8 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from src.config import BOT_TOKEN, WEBHOOK_URL
 from src.database import init_db
 from src.keep_alive import start_webhook_server
+from src.services.scheduler import start_scheduler
+
 # Routers
 from src.handlers import common, dictionary, training, translator, settings
 
