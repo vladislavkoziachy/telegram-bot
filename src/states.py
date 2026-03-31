@@ -4,8 +4,9 @@ class AddingWordStates(StatesGroup):
     waiting_for_word = State()
 
 class TrainingStates(StatesGroup):
+    waiting_for_source = State()
+    waiting_for_direction = State()
     waiting_for_answer = State()
-    training_mode = State() # to remember if it's EN->RU, RU->EN, or MIX
 
 class TranslatorStates(StatesGroup):
     waiting_for_text = State()

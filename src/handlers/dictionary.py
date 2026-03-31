@@ -73,12 +73,12 @@ async def show_dictionary_page(message_or_cb, user_id: int, learn_lang: str, sta
 
 @router.message(F.text.in_(get_all_translated("menu_my_dictionary")))
 async def btn_dictionary(message: Message, _: Callable, learn_lang: str):
-    await show_dictionary_page(message, message.from_user.id, learn_lang, 'learning', 0, "dic", _("menu_my_dictionary"), _, per_page=10)
+    await show_dictionary_page(message, message.from_user.id, learn_lang, 'learning', 0, "dic", _("menu_my_dictionary"), _, per_page=20)
 
 @router.callback_query(F.data.startswith("dic_page:"))
 async def cb_dic_page(callback: CallbackQuery, _: Callable, learn_lang: str):
     page = int(callback.data.split(":")[1])
-    await show_dictionary_page(callback, callback.from_user.id, learn_lang, 'learning', page, "dic", _("menu_my_dictionary"), _, per_page=10)
+    await show_dictionary_page(callback, callback.from_user.id, learn_lang, 'learning', page, "dic", _("menu_my_dictionary"), _, per_page=20)
 
 @router.message(F.text.in_(get_all_translated("menu_learned")))
 async def btn_learned_menu_trigger(message: Message, _: Callable, learn_lang: str):
@@ -160,7 +160,7 @@ async def cb_ignore(callback: CallbackQuery):
 
 async def return_to_list(callback: CallbackQuery, user_id: int, learn_lang: str, prefix: str, _: Callable):
     if prefix == "dic":
-        await show_dictionary_page(callback, user_id, learn_lang, 'learning', 0, "dic", _("menu_my_dictionary"), _, per_page=10)
+        await show_dictionary_page(callback, user_id, learn_lang, 'learning', 0, "dic", _("menu_my_dictionary"), _, per_page=20)
     elif prefix == "learn":
         await show_dictionary_page(callback, user_id, learn_lang, 'learned', 0, "learn", _("menu_learned"), _, per_page=20)
 

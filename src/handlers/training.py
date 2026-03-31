@@ -12,37 +12,53 @@ from src.services.i18n import get_all_translated
 router = Router()
 
 @router.message(F.text.in_(get_all_translated("menu_training")))
-async def btn_training(message: Message, _: Callable):
-    await message.answer(_("menu_training"), reply_markup=get_training_menu(_))
-
-@router.message(F.text.in_(get_all_translated("menu_choose_translation")))
-async def btn_choose_translation(message: Message, _: Callable):
+async def btn_training(message: Message, state: FSMContext, _: Callable):
     from src.keyboards.reply import get_source_menu
+    await state.set_state(TrainingStates.waiting_for_source)
     await message.answer(_("choose_dictionary", default="Из какого словаря будем учить?"), reply_markup=get_source_menu(_))
 
-@router.message(F.text.in_(get_all_translated("menu_my_dictionary") + get_all_translated("menu_learned")))
-async def btn_choose_source(message: Message, state: FSMContext, _: Callable):
-    # Mapping back to internal status
+@router.message(TrainingStates.waiting_for_source, F.text)
+async def process_source_selection(message: Message, state: FSMContext, _: Callable):
     text = message.text
+    if text in get_all_translated("btn_back") + ["⬅️ Назад", "⬅️ Взад", "⬅️ Wstecz"]:
+        await state.clear()
+        await message.answer(_("main_menu_text"), reply_markup=get_main_menu(_))
+        return
+
     source = "learning"
     if text in get_all_translated("menu_learned"):
         source = "learned"
+    elif text not in get_all_translated("menu_my_dictionary"):
+        await message.answer(_("choose_dictionary", default="Из какого словаря будем учить?"))
+        return
         
     await state.update_data(source=source)
+    await state.set_state(TrainingStates.waiting_for_direction)
+    
+    from src.keyboards.reply import get_mode_menu
     await message.answer(_("choose_mode", default="В каком режиме будем тренироваться?"), reply_markup=get_mode_menu(_))
 
-@router.message(F.text.in_(get_all_translated("training_learn_native") + get_all_translated("training_native_learn") + get_all_translated("training_mix")))
-async def start_quiz_mode(message: Message, state: FSMContext, _: Callable):
-    await state.set_state(TrainingStates.waiting_for_answer)
-    
-    if message.text in get_all_translated("training_learn_native"):
+@router.message(TrainingStates.waiting_for_direction, F.text)
+async def process_direction_selection(message: Message, state: FSMContext, _: Callable):
+    text = message.text
+    if text in get_all_translated("btn_back") + ["⬅️ Назад", "⬅️ Взад", "⬅️ Wstecz"]:
+        await state.clear()
+        await message.answer(_("main_menu_text"), reply_markup=get_main_menu(_))
+        return
+
+    if text in get_all_translated("training_learn_native"):
         normalized = "learn_native"
-    elif message.text in get_all_translated("training_native_learn"):
+    elif text in get_all_translated("training_native_learn"):
         normalized = "native_learn"
-    else:
+    elif text in get_all_translated("training_mix"):
         normalized = "mix"
+    else:
+        from src.keyboards.reply import get_mode_menu
+        await message.answer(_("choose_mode", default="В каком режиме будем тренироваться?"), reply_markup=get_mode_menu(_))
+        return
         
     await state.update_data(mode=normalized)
+    await state.set_state(TrainingStates.waiting_for_answer)
     await send_quiz(message, state, _)
 
 async def send_quiz(message: Message, state: FSMContext, _: Callable):
