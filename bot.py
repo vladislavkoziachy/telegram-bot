@@ -4,7 +4,7 @@ import sys
 
 from aiogram import Bot, Dispatcher
 from src.config import BOT_TOKEN, PORT
-from src.handlers import common
+from src.handlers import common, dictionary
 from src.services.keep_alive import start_keep_alive
 
 async def main():
@@ -20,6 +20,7 @@ async def main():
 
     # Регистрация наших обработчиков
     dp.include_router(common.router)
+    dp.include_router(dictionary.router)
 
     # Удаляем вебхук, если он был установлен ранее, чтобы избежать конфликтов
     print("Очистка вебхуков...")
