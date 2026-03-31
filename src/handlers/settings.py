@@ -52,15 +52,19 @@ async def process_interface_lang(message: Message, state: FSMContext, _: Callabl
     user = await get_user(message.from_user.id)
     if not user:
         await create_user(message.from_user.id, interface_lang=lang_code)
+        # after creation, we don't have user.learning_lang object immediately, let's fix it:
+        u_learning_lang = "en"
     else:
         await update_user(message.from_user.id, interface_lang=lang_code)
-    
+        u_learning_lang = user.learning_lang
+        
     # We need to refresh the "_" function with the new language for the next message
     from src.services.i18n import _ as get_text_new
     new_text = lambda key, **kwargs: get_text_new(key, lang_code, **kwargs)
     
     await state.clear()
-    await message.answer(new_text("main_menu_text"), reply_markup=get_main_menu(new_text))
+    text = new_text("settings_text", int_lang=lang_code.upper(), learn_lang=u_learning_lang.upper())
+    await message.answer(text, reply_markup=get_settings_menu(new_text))
 
 @router.message(F.text.in_(get_all_translated("change_learning")))
 async def btn_change_learning(message: Message, state: FSMContext, _: Callable):

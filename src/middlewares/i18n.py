@@ -16,10 +16,9 @@ class I18nMiddleware(BaseMiddleware):
         if event_user:
             user = await get_user(event_user.id)
             if not user:
-                # User will be created in the start handler or here
-                # Better to just pass a default for now if not found
-                user_lang = "ru"
-                learn_lang = "en"
+                user = await create_user(event_user.id)
+                user_lang = user.interface_lang
+                learn_lang = user.learning_lang
             else:
                 user_lang = user.interface_lang
                 learn_lang = user.learning_lang
