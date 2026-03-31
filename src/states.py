@@ -12,5 +12,4 @@ class TranslatorStates(StatesGroup):
     waiting_for_text = State()
 
 class LanguageStates(StatesGroup):
-    waiting_for_interface_lang = State()
-    waiting_for_learning_lang = State()
+    pass # Deleting this since we don't use it anymore but keeping class to avoid imports breaking if any found elsewhere (unlikely)

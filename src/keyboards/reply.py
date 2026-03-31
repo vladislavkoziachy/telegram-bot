@@ -1,67 +1,65 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-from typing import Callable
 
-def get_main_menu(_: Callable) -> ReplyKeyboardMarkup:
+def get_main_menu() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=_("menu_add_word"))],
-            [KeyboardButton(text=_("menu_my_dictionary")), KeyboardButton(text=_("menu_training"))],
-            [KeyboardButton(text=_("menu_learned")), KeyboardButton(text=_("menu_translator"))],
-            [KeyboardButton(text=_("menu_settings"))]
+            [KeyboardButton(text="➕ Добавить слово")],
+            [KeyboardButton(text="📖 Мой словарь"), KeyboardButton(text="🎯 Тренировка")],
+            [KeyboardButton(text="📚 Выученные"), KeyboardButton(text="🌐 Переводчик")],
+            [KeyboardButton(text="⚙️ Настройки")]
         ],
         resize_keyboard=True
     )
 
-def get_settings_menu(_: Callable) -> ReplyKeyboardMarkup:
+def get_settings_menu() -> ReplyKeyboardMarkup:
+    # We removed language changes, but kept the menu for structure/stats
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=_("change_interface"))],
-            [KeyboardButton(text=_("change_learning"))],
-            [KeyboardButton(text=_("btn_back"))]
+            [KeyboardButton(text="📊 Моя статистика")],
+            [KeyboardButton(text="⬅️ Назад")]
         ],
         resize_keyboard=True
     )
 
-def get_learned_menu(_: Callable, total: int, week: int, today: int) -> ReplyKeyboardMarkup:
-    # Key remains technical, but display depends on counts
+def get_learned_menu(total: int, week: int, today: int) -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=_("menu_stats_all", total=total))],
-            [KeyboardButton(text=_("menu_stats_week", week=week))],
-            [KeyboardButton(text=_("menu_stats_today", today=today))],
-            [KeyboardButton(text=_("btn_back"))]
+            [KeyboardButton(text=f"📚 Все выученные ({total})")],
+            [KeyboardButton(text=f"📅 За неделю ({week})")],
+            [KeyboardButton(text=f"🕒 За сегодня ({today})")],
+            [KeyboardButton(text="⬅️ Назад")]
         ],
         resize_keyboard=True
     )
 
-def get_training_menu(_: Callable) -> ReplyKeyboardMarkup:
+def get_training_menu() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=_("menu_choose_translation"))],
-            [KeyboardButton(text=_("btn_back"))]
+            [KeyboardButton(text="🧩 Выбери перевод")],
+            [KeyboardButton(text="⬅️ Назад")]
         ],
         resize_keyboard=True
     )
 
-def get_source_menu(_: Callable) -> ReplyKeyboardMarkup:
+def get_source_menu() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=_("menu_my_dictionary")), KeyboardButton(text=_("menu_learned"))],
-            [KeyboardButton(text=_("btn_back"))]
+            [KeyboardButton(text="📖 Мой словарь"), KeyboardButton(text="📚 Выученные")],
+            [KeyboardButton(text="⬅️ Назад")]
         ],
         resize_keyboard=True
     )
 
-def get_mode_menu(_: Callable) -> ReplyKeyboardMarkup:
+def get_mode_menu() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=_("training_learn_native")), KeyboardButton(text=_("training_native_learn"))],
-            [KeyboardButton(text=_("training_mix")), KeyboardButton(text=_("btn_back"))]
+            [KeyboardButton(text="EN → RU"), KeyboardButton(text="RU → EN")],
+            [KeyboardButton(text="MIX"), KeyboardButton(text="⬅️ Назад")]
         ],
         resize_keyboard=True
     )
 
-def get_quiz_keyboard(options: list[str], stop_text: str = "🛑 Завершить тренировку") -> ReplyKeyboardMarkup:
+def get_quiz_keyboard(options: list[str], stop_text: str = "⬅️ Назад") -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text=options[0]), KeyboardButton(text=options[1])],
@@ -71,25 +69,17 @@ def get_quiz_keyboard(options: list[str], stop_text: str = "🛑 Заверши�
         resize_keyboard=True
     )
 
-def get_back_button(_: Callable) -> ReplyKeyboardMarkup:
+def get_back_button() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text=_("btn_back"))]],
+        keyboard=[[KeyboardButton(text="⬅️ Назад")]],
         resize_keyboard=True
     )
 
-def get_translator_menu(_: Callable) -> ReplyKeyboardMarkup:
+def get_translator_menu() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=_("menu_text_translation"))],
-            [KeyboardButton(text=_("menu_photo_translation"))],
-            [KeyboardButton(text=_("btn_back"))]
+            [KeyboardButton(text="📝 Текстовый перевод")],
+            [KeyboardButton(text="⬅️ Назад")]
         ],
         resize_keyboard=True
     )
-
-def get_lang_selection_keyboard(langs: list[tuple[str, str]]) -> ReplyKeyboardMarkup:
-    """langs: list of (lang_code, lang_display_name)"""
-    buttons = []
-    for code, name in langs:
-        buttons.append([KeyboardButton(text=name)])
-    return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)

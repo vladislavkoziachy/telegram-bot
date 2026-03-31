@@ -12,9 +12,6 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from src.config import BOT_TOKEN, WEBHOOK_URL
 from src.database import init_db
 from src.keep_alive import start_webhook_server
-from src.services.scheduler import start_scheduler
-from src.middlewares.i18n import I18nMiddleware
-
 # Routers
 from src.handlers import common, dictionary, training, translator, settings
 
@@ -42,10 +39,6 @@ async def main():
         
         # Start Scheduler
         start_scheduler(bot)
-        
-        # Middlewares
-        dp.message.middleware(I18nMiddleware())
-        dp.callback_query.middleware(I18nMiddleware())
         
         # Include all routers
         dp.include_router(settings.router)
