@@ -6,6 +6,7 @@ from aiogram import Bot, Dispatcher
 from src.config import BOT_TOKEN, PORT
 from src.handlers import common, dictionary
 from src.services.keep_alive import start_keep_alive
+from src.database.instance import init_db
 
 async def main():
     # Логирование — полезная штука, чтобы видеть в консоли, что происходит с ботом
@@ -14,6 +15,9 @@ async def main():
     # Инициализация бота и диспетчера (мозга бота)
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
+
+    # Инициализация базы данных
+    await init_db()
 
     # Запускаем фиктивный сервер для Render
     await start_keep_alive()

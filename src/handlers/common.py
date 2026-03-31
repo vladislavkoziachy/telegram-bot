@@ -1,40 +1,45 @@
 from aiogram import Router, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from src.keyboards.reply import get_main_menu
-from src.keyboards.inline import get_learned_menu
+
+from src.database.instance import async_session
+from src.database.actions import get_or_create_user, get_words_count
+from src.keyboards.reply import get_main_menu, get_learned_menu
 from src.states import AddWord
 
-# Router помогает нам разделять логику на разные файлы
 router = Router()
 
 @router.message(Command("start"))
 async def cmd_start(message: types.Message, state: FSMContext):
-    # Очищаем все старые состояния, если они были
     await state.clear()
+    async with async_session() as session:
+        # Регистрируем пользователя
+        await get_or_create_user(session, message.from_user.id)
     
     await message.answer(
         "Привет! Я твой личный помощник для изучения английского. \n"
-        "Давай начнем учить новые слова! 🚀",
+        "Пиши любое слово — и я добавлю его в твой словарь!",
         reply_markup=get_main_menu()
     )
 
-# 1. Нажатие на "➕ Добавить слово"
 @router.message(F.text == "➕ Добавить слово")
-async def cmd_add_word(message: types.Message, state: FSMContext):
-    # Переводим бота в режим ожидания слова
+async def start_add_word(message: types.Message, state: FSMContext):
     await state.set_state(AddWord.waiting_for_word)
-    await message.answer("Хорошо! Введите слово на <b>английском</b>, которое хотите добавить:")
+    await message.answer("Введите слово на английском или русском языке:")
 
-# 2. Нажатие на "📖 Мой словарь"
-@router.message(F.text == "📖 Мой словарь")
-async def cmd_my_dictionary(message: types.Message):
-    await message.answer("📖 В вашем словаре пока нет слов. \nЧтобы добавить слово, нажмите кнопку выше! 👇")
-
-# 3. Нажатие на "📚 Выученные"
 @router.message(F.text == "📚 Выученные")
-async def cmd_learned(message: types.Message):
-    await message.answer(
-        "📚 Здесь будут слова, которые вы уже выучили. \nВыберите категорию:",
-        reply_markup=get_learned_menu()
-    )
+async def show_learned_menu(message: types.Message):
+    async with async_session() as session:
+        # Считаем слова для счетчиков
+        uid = message.from_user.id
+        counts = {
+            "today": await get_words_count(session, uid, "learned", days=1),
+            "week": await get_words_count(session, uid, "learned", days=7),
+            "all": await get_words_count(session, uid, "learned")
+        }
+    
+    await message.answer("Раздел выученных слов:", reply_markup=get_learned_menu(counts))
+
+@router.message(F.text == "⬅️ Назад в меню")
+async def back_to_main(message: types.Message):
+    await message.answer("Главное меню:", reply_markup=get_main_menu())
