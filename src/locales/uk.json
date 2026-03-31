@@ -29,8 +29,11 @@
     "menu_choose_translation": "🎯 Вибери переклад",
     "training_learn_native": "Навч. ➔ Рідна",
     "training_native_learn": "Рідна ➔ Навч.",
-    "training_mix": "Упереміш",
     "menu_stats_all": "Показати всі вивчені слова ({total})",
     "menu_stats_week": "Вивчені за останній тиждень ({week})",
-    "menu_stats_today": "Вивчені за сьогоднішній день ({today})"
+    "menu_stats_today": "Вивчені за сьогоднішній день ({today})",
+    "welcome_word_add": "Напиши слово вивченою або рідною мовою ✍️",
+    "choose_dictionary": "З якого словника будемо вчити?",
+    "choose_mode": "В якому режимі будемо тренуватися?",
+    "empty_dictionary": "Порожньо 😢"
 }

@@ -18,7 +18,7 @@ async def btn_training(message: Message, _: Callable):
 @router.message(F.text.in_(get_all_translated("menu_choose_translation")))
 async def btn_choose_translation(message: Message, _: Callable):
     from src.keyboards.reply import get_source_menu
-    await message.answer(_("welcome_learning"), reply_markup=get_source_menu(_))
+    await message.answer(_("choose_dictionary", default="Из какого словаря будем учить?"), reply_markup=get_source_menu(_))
 
 @router.message(F.text.in_(get_all_translated("menu_my_dictionary") + get_all_translated("menu_learned")))
 async def btn_choose_source(message: Message, state: FSMContext, _: Callable):
@@ -29,7 +29,7 @@ async def btn_choose_source(message: Message, state: FSMContext, _: Callable):
         source = "learned"
         
     await state.update_data(source=source)
-    await message.answer(_("welcome_learning"), reply_markup=get_mode_menu(_))
+    await message.answer(_("choose_mode", default="В каком режиме будем тренироваться?"), reply_markup=get_mode_menu(_))
 
 @router.message(F.text.in_(get_all_translated("training_learn_native") + get_all_translated("training_native_learn") + get_all_translated("training_mix")))
 async def start_quiz_mode(message: Message, state: FSMContext, _: Callable):

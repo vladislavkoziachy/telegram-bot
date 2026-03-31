@@ -32,5 +32,9 @@
     "training_mix": "Вперемешку",
     "menu_stats_all": "Показать все выученные слова ({total})",
     "menu_stats_week": "Выученные за последнюю неделю ({week})",
-    "menu_stats_today": "Выученные за сегодняшний день ({today})"
+    "menu_stats_today": "Выученные за сегодняшний день ({today})",
+    "welcome_word_add": "Напиши слово на изучаемом или родном языке ✍️",
+    "choose_dictionary": "Из какого словаря будем учить?",
+    "choose_mode": "В каком режиме будем тренироваться?",
+    "empty_dictionary": "Пусто 😢"
 }

@@ -53,7 +53,7 @@ async def cb_add_word(callback: CallbackQuery, state: FSMContext, learn_lang: st
 async def show_dictionary_page(message_or_cb, user_id: int, learn_lang: str, status: str, page: int, prefix: str, title: str, _: Callable, since=None, per_page: int=20):
     words = await get_words(user_id, learn_lang, status, since=since)
     if not words:
-        msg = "Empty 😢"
+        msg = _("empty_dictionary", default="Пусто 😢")
         if isinstance(message_or_cb, Message):
             await message_or_cb.answer(msg)
         else:

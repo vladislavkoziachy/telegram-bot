@@ -29,8 +29,11 @@
     "menu_choose_translation": "🎯 Wybierz tłumaczenie",
     "training_learn_native": "Ojc. ➔ Doc.",
     "training_native_learn": "Doc. ➔ Ojc.",
-    "training_mix": "Mieszany",
     "menu_stats_all": "Pokaż wszystkie wyuczone słowa ({total})",
     "menu_stats_week": "Wyuczone w ostatnim tygodniu ({week})",
-    "menu_stats_today": "Wyuczone dzisiaj ({today})"
+    "menu_stats_today": "Wyuczone dzisiaj ({today})",
+    "welcome_word_add": "Napisz słowo w języku docelowym lub ojczystym ✍️",
+    "choose_dictionary": "Z jakiego słownika będziemy się uczyć?",
+    "choose_mode": "W jakim trybie będziemy trenować?",
+    "empty_dictionary": "Pusto 😢"
 }

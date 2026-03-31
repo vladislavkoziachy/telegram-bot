@@ -25,7 +25,8 @@ LANGS_LEARNING = [
 
 @router.message(F.text.in_(get_all_translated("menu_settings")))
 async def btn_settings(message: Message, _: Callable, user_lang: str, learn_lang: str):
-    await message.answer(_("menu_settings") + f"\n\nМова інтерфейсу: {user_lang.upper()}\nМова навчання: {learn_lang.upper()}", reply_markup=get_settings_menu(_))
+    text = _("settings_text", int_lang=user_lang.upper(), learn_lang=learn_lang.upper())
+    await message.answer(text, reply_markup=get_settings_menu(_))
 
 @router.message(F.text.in_(get_all_translated("change_interface")))
 async def btn_change_interface(message: Message, state: FSMContext, _: Callable):
