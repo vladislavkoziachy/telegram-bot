@@ -17,6 +17,9 @@ async def main():
     # Регистрация наших обработчиков
     dp.include_router(common.router)
 
+    # Удаляем вебхук, если он был установлен ранее, чтобы избежать конфликтов
+    await bot.delete_webhook(drop_pending_updates=True)
+
     # Запуск бота. Polling означает "опрос" новых сообщений.
     print("Бот запущен и готов к работе...")
     await dp.start_polling(bot)
