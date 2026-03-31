@@ -31,7 +31,7 @@ async def btn_settings(message: Message, _: Callable, user_lang: str, learn_lang
 @router.message(F.text.in_(get_all_translated("change_interface")))
 async def btn_change_interface(message: Message, state: FSMContext, _: Callable):
     await state.set_state(LanguageStates.waiting_for_interface_lang)
-    await message.answer(_("select_interface_lang"), reply_markup=get_lang_selection_keyboard(LANGS_INTERFACE))
+    await message.answer(_("select_interface_lang", default="На какой язык хотите сменить интерфейс?"), reply_markup=get_lang_selection_keyboard(LANGS_INTERFACE))
 
 @router.message(LanguageStates.waiting_for_interface_lang)
 async def process_interface_lang(message: Message, state: FSMContext, _: Callable):
@@ -59,8 +59,8 @@ async def process_interface_lang(message: Message, state: FSMContext, _: Callabl
     from src.services.i18n import _ as get_text_new
     new_text = lambda key, **kwargs: get_text_new(key, lang_code, **kwargs)
     
-    await state.set_state(LanguageStates.waiting_for_learning_lang)
-    await message.answer(new_text("welcome_learning"), reply_markup=get_lang_selection_keyboard(LANGS_LEARNING))
+    await state.clear()
+    await message.answer(new_text("main_menu_text"), reply_markup=get_main_menu(new_text))
 
 @router.message(F.text.in_(get_all_translated("change_learning")))
 async def btn_change_learning(message: Message, state: FSMContext, _: Callable):

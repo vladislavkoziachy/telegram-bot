@@ -93,17 +93,17 @@ async def btn_learned_menu_trigger(message: Message, _: Callable, learn_lang: st
     
     await message.answer(_("menu_learned"), reply_markup=get_learned_menu(_, total, week, today))
 
-@router.message(F.text.startswith(("Показать все выученные слова", "Показати всі вивчені слова", "Pokaż wszystkie wyuczone słowa")))
+@router.message(F.text.func(lambda text: any(kw in text.lower() for kw in ["все выученные слова", "всі вивчені", "wszystkie wyuczone"])))
 async def btn_show_all_learned(message: Message, _: Callable, learn_lang: str):
     await show_dictionary_page(message, message.from_user.id, learn_lang, 'learned', 0, "learn", _("menu_learned"), _, per_page=20)
 
-@router.message(F.text.startswith(("Выученные за последнюю", "Вивчені за останній", "Wyuczone w ostatnim")))
+@router.message(F.text.func(lambda text: any(kw in text.lower() for kw in ["последнюю", "останн", "ostatni"])))
 async def btn_show_week_learned(message: Message, _: Callable, learn_lang: str):
     from datetime import datetime, timedelta
     since = datetime.utcnow() - timedelta(days=7)
     await show_dictionary_page(message, message.from_user.id, learn_lang, 'learned', 0, "learn", _("menu_learned"), _, since=since, per_page=20)
 
-@router.message(F.text.startswith(("Выученные за сегодняшний", "Вивчені за сьогоднішній", "Wyuczone dzisiaj")))
+@router.message(F.text.func(lambda text: any(kw in text.lower() for kw in ["сегодняшний", "сьогодні", "dzisiaj"])))
 async def btn_show_today_learned(message: Message, _: Callable, learn_lang: str):
     from datetime import datetime
     since = datetime.utcnow().replace(hour=0, minute=0, second=0)

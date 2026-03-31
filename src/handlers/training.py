@@ -13,6 +13,11 @@ router = Router()
 
 @router.message(F.text.in_(get_all_translated("menu_training")))
 async def btn_training(message: Message, state: FSMContext, _: Callable):
+    from src.keyboards.reply import get_training_menu
+    await message.answer(_("menu_training"), reply_markup=get_training_menu(_))
+
+@router.message(F.text.in_(get_all_translated("menu_choose_translation")))
+async def btn_choose_translation(message: Message, state: FSMContext, _: Callable):
     from src.keyboards.reply import get_source_menu
     await state.set_state(TrainingStates.waiting_for_source)
     await message.answer(_("choose_dictionary", default="Из какого словаря будем учить?"), reply_markup=get_source_menu(_))
