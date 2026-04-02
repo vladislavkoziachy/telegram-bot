@@ -43,3 +43,24 @@ def get_word_manage_kb(word_id: int, current_status: str):
     buttons.append([InlineKeyboardButton(text="🗑 Удалить", callback_data=f"delete_word_{word_id}")])
     
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+def get_training_type_kb():
+    buttons = [
+        [InlineKeyboardButton(text="💎 Выбери перевод", callback_data="train_type_choice")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+def get_training_pool_kb():
+    buttons = [
+        [InlineKeyboardButton(text="📖 Учить новые (Словарь)", callback_data="train_pool_learning")],
+        [InlineKeyboardButton(text="✅ Повторить выученные", callback_data="train_pool_learned")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+def get_training_direction_kb():
+    buttons = [
+        [InlineKeyboardButton(text="🇷🇺 RU ➡️ 🇬🇧 EN", callback_data="train_dir_ru_en")],
+        [InlineKeyboardButton(text="🇬🇧 EN ➡️ 🇷🇺 RU", callback_data="train_dir_en_ru")],
+        [InlineKeyboardButton(text="🔀 Микс (Случайно)", callback_data="train_dir_mix")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
