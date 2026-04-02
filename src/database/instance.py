@@ -3,7 +3,13 @@ from sqlalchemy.orm import declarative_base
 from src.config import DATABASE_URL
 
 # Создаем движок (двигатель) для общения с базой (SQLite или PostgreSQL)
-engine = create_async_engine(DATABASE_URL, echo=False)
+# Настройка statement_cache_size=0 НУЖНА для стабильной работы с Supabase (PGBouncer)
+engine = create_async_engine(
+    DATABASE_URL, 
+    echo=False,
+    pool_pre_ping=True,
+    connect_args={"statement_cache_size": 0}
+)
 
 # Создаем сессию — это как "открытый канал" связи с базой
 async_session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
