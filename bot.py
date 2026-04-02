@@ -1,43 +1,63 @@
 import asyncio
 import logging
 import sys
+import os
+from aiohttp import web
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+
 from src.config import BOT_TOKEN, PORT
 from src.handlers import common, dictionary, training
-from src.services.keep_alive import start_keep_alive
 from src.database.instance import init_db
 
-async def main():
-    # Логирование — полезная штука, чтобы видеть в консоли, что происходит с ботом
+# Ссылка из настроек Render (например, https://bot.onrender.com)
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+
+async def on_startup(bot: Bot) -> None:
+    # Инициализация базы
+    await init_db()
+    # Установка вебхука
+    print(f"Установка вебхука на: {WEBHOOK_URL}")
+    await bot.set_webhook(WEBHOOK_URL, drop_pending_updates=True)
+
+def main() -> None:
+    # Настройка логирования
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
-    # Инициализация бота и диспетчера (мозга бота)
+    # Инициализация бота и диспетчера
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()
 
-    # Инициализация базы данных
-    await init_db()
-
-    # Запускаем фиктивный сервер для Render
-    await start_keep_alive()
-
-    # Регистрируем роутеры (обработчики)
+    # Регистрируем роутеры
     dp.include_router(common.router)
     dp.include_router(dictionary.router)
     dp.include_router(training.router)
 
-    # Удаляем вебхук, если он был установлен ранее, чтобы избежать конфликтов
-    print("Очистка вебхуков...")
-    await bot.delete_webhook(drop_pending_updates=True)
-    await asyncio.sleep(10) # Небольшая пауза для сброса соединений Telegram
+    # При событии запуска (startup) вызываем нашу функцию
+    dp.startup.register(on_startup)
 
-    # Запуск бота. Polling означает "опрос" новых сообщений.
-    print("Бот запущен и готов к работе...")
-    await dp.start_polling(bot)
+    # Создаем aiohttp приложение
+    app = web.Application()
+
+    # Настраиваем обработчик вебхуков
+    webhook_requests_handler = SimpleRequestHandler(
+        dispatcher=dp,
+        bot=bot,
+    )
+    # Регистрируем путь из WEBHOOK_URL (все что после домена)
+    # Если в URL есть путь (например, /webhook), мы его вырежем
+    webhook_path = "/" + WEBHOOK_URL.split("/")[-1] if "/" in WEBHOOK_URL else "/"
+    webhook_requests_handler.register(app, path=webhook_path)
+
+    # Настраиваем приложение
+    setup_application(app, dp, bot=bot)
+
+    # Запускаем сервер
+    print(f"Запуск сервера на порту {PORT}...")
+    web.run_app(app, host="0.0.0.0", port=PORT)
 
 if __name__ == "__main__":
-    # Запускаем асинхронную функцию main
-    asyncio.run(main())
+    main()
