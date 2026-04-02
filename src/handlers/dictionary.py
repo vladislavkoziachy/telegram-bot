@@ -16,6 +16,8 @@ async def show_dictionary(message: types.Message):
     async with async_session() as session:
         words = await get_user_words(session, message.from_user.id, "learning")
     
+    print(f"[DEBUG] Показ словаря для {message.from_user.id}, найдено слов: {len(words)}")
+    
     if not words:
         await message.answer("📖 В вашем словаре пока нет слов. \nЧтобы добавить слово, просто напишите его мне!")
         return

@@ -41,7 +41,7 @@ async def show_learned_menu(message: types.Message):
     
     await message.answer("Раздел выученных слов:", reply_markup=get_learned_menu(counts))
 
-@router.message(F.text.startswith("📅 Выучено за сегодня"))
+@router.message(F.text.contains("Выучено за сегодня"))
 async def show_learned_today(message: types.Message):
     async with async_session() as session:
         words = await get_user_words(session, message.from_user.id, "learned", days=1)
@@ -52,7 +52,7 @@ async def show_learned_today(message: types.Message):
     
     await message.answer("Слова, закрепленные сегодня:", reply_markup=get_words_list_kb(words))
 
-@router.message(F.text.startswith("📅 Выучено за неделю"))
+@router.message(F.text.contains("Выучено за неделю"))
 async def show_learned_week(message: types.Message):
     async with async_session() as session:
         words = await get_user_words(session, message.from_user.id, "learned", days=7)
@@ -63,7 +63,7 @@ async def show_learned_week(message: types.Message):
     
     await message.answer("Слова, закрепленные за неделю:", reply_markup=get_words_list_kb(words))
 
-@router.message(F.text.startswith("📅 Выучено за всё время"))
+@router.message(F.text.contains("Выучено за всё время"))
 async def show_learned_all(message: types.Message):
     async with async_session() as session:
         words = await get_user_words(session, message.from_user.id, "learned")
