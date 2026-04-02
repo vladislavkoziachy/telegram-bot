@@ -10,6 +10,9 @@ PORT = int(os.getenv("PORT", 10000))
 URL = os.getenv("DATABASE_URL") or "sqlite+aiosqlite:///words.db"
 if URL.startswith("postgresql://"):
     URL = URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+    # Убираем параметры вроде ?pgbouncer=true, которые вызывают ошибки
+    if "?" in URL:
+        URL = URL.split("?")[0]
 
 DATABASE_URL = URL
 
