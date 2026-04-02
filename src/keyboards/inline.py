@@ -3,6 +3,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 def get_add_word_confirm_kb():
     buttons = [
+        [InlineKeyboardButton(text="🔊 Послушать", callback_data="pronounce_new")],
         [InlineKeyboardButton(text="✅ Добавить в словарь", callback_data="confirm_add")],
         [InlineKeyboardButton(text="❌ Отмена", callback_data="cancel_add")]
     ]
