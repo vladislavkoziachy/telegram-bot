@@ -3,6 +3,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 def get_main_menu():
     keyboard = [
+        [KeyboardButton(text="🎓 Тренировка")],
         [KeyboardButton(text="➕ Добавить слово")],
         [KeyboardButton(text="📖 Мой словарь"), KeyboardButton(text="📚 Выученные")]
     ]

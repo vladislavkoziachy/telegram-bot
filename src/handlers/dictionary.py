@@ -100,7 +100,9 @@ async def confirm_add_word(callback: types.CallbackQuery, state: FSMContext):
     async with async_session() as session:
         await add_word(session, callback.from_user.id, data['original'], data['translated'])
     
-    await callback.message.edit_text(f"✅ Слово '<b>{data['original']}</b>' добавлено!")
+    await callback.message.edit_text(
+        f"✅ Добавлено! <b>{data['original']}</b> — это <b>{data['translated']}</b>"
+    )
     await state.clear()
     await callback.answer()
 
