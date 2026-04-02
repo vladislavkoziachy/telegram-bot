@@ -71,27 +71,24 @@ async def handle_delete(callback: types.CallbackQuery):
     await callback.answer()
 
 # Обработка любого текста — если бот в режиме "Добавить слово"
-@router.message(AddWord.waiting_for_word)
+@router.message(F.text & ~F.text.startswith("/") & ~F.text.in_([
+    "➕ Добавить слово", "📖 Мой словарь", "📚 Выученные", "🎓 Тренировка", "⬅️ Назад в меню"
+]))
 async def process_word_input(message: types.Message, state: FSMContext):
-    # Если нажали кнопку меню — отменяем ввод
-    if message.text.startswith("➕") or message.text.startswith("📖") or message.text.startswith("📚"):
-        await state.clear()
+    word = message.text.strip()
+    
+    # Пытаемся перевести слово
+    translation = translate_text(word)
+    
+    if not translation:
+        await message.answer("🤔 Не удалось перевести это слово. Попробуйте другое!")
         return
 
-    # Переводим слово
-    result = translate_text(message.text)
-    if not result:
-        await message.answer("Извините, не удалось перевести слово. Попробуйте другое.")
-        return
-
-    # Сохраняем в память для подтверждения
-    await state.update_data(
-        original=result['original'],
-        translated=result['translated']
-    )
+    # Сохраняем во временное состояние для подтверждения
+    await state.update_data(original=word, translated=translation)
     
     await message.answer(
-        f"🔍 Перевод: <b>{result['translated']}</b>\n\nДобавить это слово в ваш словарь?",
+        f"🔍 Перевод: <b>{translation}</b>\n\nДобавить в ваш словарь?",
         reply_markup=get_add_word_confirm_kb()
     )
 
