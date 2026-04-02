@@ -78,17 +78,17 @@ async def process_word_input(message: types.Message, state: FSMContext):
     word = message.text.strip()
     
     # Пытаемся перевести слово
-    translation = translate_text(word)
+    res = translate_text(word)
     
-    if not translation:
+    if not res:
         await message.answer("🤔 Не удалось перевести это слово. Попробуйте другое!")
         return
 
     # Сохраняем во временное состояние для подтверждения
-    await state.update_data(original=word, translated=translation)
+    await state.update_data(original=res['original'], translated=res['translated'])
     
     await message.answer(
-        f"🔍 Перевод: <b>{translation}</b>\n\nДобавить в ваш словарь?",
+        f"📝 Перевод: <b>{res['translated']}</b>\n\nДобавить в ваш словарь?",
         reply_markup=get_add_word_confirm_kb()
     )
 
