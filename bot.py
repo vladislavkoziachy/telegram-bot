@@ -32,7 +32,7 @@ async def main():
     # Удаляем вебхук, если он был установлен ранее, чтобы избежать конфликтов
     print("Очистка вебхуков...")
     await bot.delete_webhook(drop_pending_updates=True)
-    await asyncio.sleep(2) # Небольшая пауза для сброса соединений Telegram
+    await asyncio.sleep(10) # Небольшая пауза для сброса соединений Telegram
 
     # Запуск бота. Polling означает "опрос" новых сообщений.
     print("Бот запущен и готов к работе...")
