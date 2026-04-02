@@ -33,6 +33,7 @@ def get_quiz_kb(options: list, word_id: int):
 
 def get_word_manage_kb(word_id: int, current_status: str):
     buttons = []
+    buttons.append([InlineKeyboardButton(text="🔊 Послушать", callback_data=f"pronounce_word_{word_id}")])
     if current_status == "learning":
         buttons.append([InlineKeyboardButton(text="✅ Я выучил!", callback_data=f"set_learned_{word_id}")])
     else:

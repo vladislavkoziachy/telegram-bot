@@ -3,14 +3,14 @@ from gtts import gTTS
 from aiogram import types
 import uuid
 
-async def send_voice_pronunciation(message: types.Message, text: str, lang: str = 'en'):
-    """Генерирует и отправляет голосовое сообщение с произношением."""
+async def send_voice_pronunciation(message: types.Message, text: str):
+    """Генерирует и отправляет голосовое сообщение с английским произношением."""
     # Создаем временное имя файла
     filename = f"voice_{uuid.uuid4()}.mp3"
     
     try:
-        # Генерируем аудио
-        tts = gTTS(text=text, lang=lang)
+        # Генерируем аудио (всегда на английском)
+        tts = gTTS(text=text, lang='en')
         tts.save(filename)
         
         # Отправляем аудио из файла
