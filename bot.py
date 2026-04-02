@@ -6,7 +6,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from src.config import BOT_TOKEN, PORT
-from src.handlers import common, dictionary
+from src.handlers import common, dictionary, training
 from src.services.keep_alive import start_keep_alive
 from src.database.instance import init_db
 
@@ -24,9 +24,10 @@ async def main():
     # Запускаем фиктивный сервер для Render
     await start_keep_alive()
 
-    # Регистрация наших обработчиков
+    # Регистрируем роутеры (обработчики)
     dp.include_router(common.router)
     dp.include_router(dictionary.router)
+    dp.include_router(training.router)
 
     # Удаляем вебхук, если он был установлен ранее, чтобы избежать конфликтов
     print("Очистка вебхуков...")
