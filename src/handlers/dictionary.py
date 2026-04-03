@@ -27,9 +27,36 @@ async def send_dict_page(message: types.Message, page: int, is_edit: bool = Fals
         words = await get_user_words(session, user_id, "learning")
     
     if not words:
+        await message.answer("📝 В вашем словаре пока нет слов. Напишите любое слово, чтобы добавить его!")
         return
+
+    total_pages = (len(words) - 1) // 10 + 1
+    kb = get_paginated_words_kb(words, page, total_pages, "dict")
     
-    # Управление конкретным словом (показ меню)
+    text = f"📖 <b>Ваш словарь (в процессе изучения)</b>\nСтраница: {page} из {total_pages}"
+    
+    if is_edit:
+        await message.edit_text(text, reply_markup=kb)
+    else:
+        await message.answer(text, reply_markup=kb)
+
+# Озвучка слова из базы
+@router.callback_query(F.data.startswith("pronounce_word:"))
+async def pronounce_existing_word(callback: types.CallbackQuery):
+    word_id = int(callback.data.split(":")[1])
+    
+    async with async_session() as session:
+        word = await get_word_by_id(session, word_id)
+    
+    if not word:
+        await callback.answer("Слово не найдено.")
+        return
+
+    text_to_speak = word.translated_text if is_russian(word.original_text) else word.original_text
+    await send_voice_pronunciation(callback.message, text_to_speak)
+    await callback.answer()
+
+# Управление конкретным словом (показ меню)
 @router.callback_query(F.data.startswith("manage_word:"))
 async def show_word_management(callback: types.CallbackQuery):
     # Формат: manage_word:ID:PREFIX:PAGE
@@ -59,27 +86,29 @@ async def show_word_management(callback: types.CallbackQuery):
     await callback.answer()
 
 # Изменение статуса (Выучил / Вернуть)
-@router.callback_query(F.data.startswith("set_"))
+@router.callback_query(F.data.startswith("set_learned:") | F.data.startswith("set_learning:"))
 async def change_status(callback: types.CallbackQuery):
-    # data: set_learned_ID или set_learning_ID
-    parts = callback.data.split("_")
-    new_status = parts[1]
-    word_id = int(parts[2])
+    # data: set_learned:ID
+    parts = callback.data.split(":")
+    new_status = parts[0].replace("set_", "")
+    word_id = int(parts[1])
     
     async with async_session() as session:
         await update_word_status(session, word_id, new_status)
+        await session.commit()
     
     status_msg = "✅ Перенесено в 'Выученные'" if new_status == "learned" else "📖 Возвращено в 'Словарь'"
     await callback.message.edit_text(status_msg)
     await callback.answer()
 
 # Удаление слова
-@router.callback_query(F.data.startswith("delete_word_"))
+@router.callback_query(F.data.startswith("delete_word:"))
 async def handle_delete(callback: types.CallbackQuery):
-    word_id = int(callback.data.split("_")[-1])
+    word_id = int(callback.data.split(":")[1])
     
     async with async_session() as session:
         await delete_word(session, word_id)
+        await session.commit()
     
     await callback.message.edit_text("🗑 Слово удалено из вашего словаря.")
     await callback.answer()

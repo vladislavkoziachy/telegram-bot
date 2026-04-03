@@ -95,7 +95,17 @@ async def send_next_question(message: types.Message, state: FSMContext):
 
     # Генерируем варианты
     options = [{"text": correct_answer, "is_correct": "yes"}]
-    decoys = ["Apple", "Book", "House", "Car", "Sun", "Water", "Friend", "Sky", "Table"]
+    
+    # Списки "обманок" на разных языках
+    en_decoys = ["Apple", "Book", "House", "Car", "Sun", "Water", "Friend", "Sky", "Table", "Moon", "Tree", "Bird"]
+    ru_decoys = ["Яблоко", "Книга", "Дом", "Машина", "Солнце", "Вода", "Друг", "Небо", "Стол", "Луна", "Дерево", "Птица"]
+    
+    # Выбираем обманки того же языка, что и правильный ответ
+    if is_russian(correct_answer):
+        decoys = [d for d in ru_decoys if d.lower() != correct_answer.lower()]
+    else:
+        decoys = [d for d in en_decoys if d.lower() != correct_answer.lower()]
+        
     random.shuffle(decoys)
     for i in range(3):
         options.append({"text": decoys[i], "is_correct": "no"})
