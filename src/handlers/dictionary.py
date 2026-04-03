@@ -36,7 +36,8 @@ async def send_dict_page(message: types.Message, page: int, is_edit: bool = Fals
     total_pages = (len(words) - 1) // 6 + 1
     kb = get_paginated_words_kb(words, page, total_pages, "dict")
     
-    text = f"📖 <b>Ваш словарь (в процессе изучения)</b>\nСтраница: {page} из {total_pages}"
+    # Красивый заголовок в стиле старой версии
+    text = f"📖 <b>Мой словарь (Всего: {len(words)})</b>\nСтраница: {page} из {total_pages}"
     
     if is_edit:
         await message.edit_text(text, reply_markup=kb)

@@ -86,7 +86,14 @@ async def send_learned_page(message: types.Message, page: int, period: str, is_e
     # Используем префикс learned_today (через _) для кнопок
     kb = get_paginated_words_kb(words, page, total_pages, f"learned_{period}")
     
-    text = f"📖 <b>Список выученных слов</b>\nПериод: {period}\nСтраница: {page} из {total_pages}"
+    # Красивый заголовок в стиле старой версии
+    titles = {
+        "today": "☀️ За сегодня",
+        "week": "📅 За неделю",
+        "all": "📚 За все время"
+    }
+    title = titles.get(period, "📜 Список слов")
+    text = f"<b>{title} (Всего: {len(words)})</b>\nСтраница: {page} из {total_pages}"
     
     if is_edit:
         await message.edit_text(text, reply_markup=kb)

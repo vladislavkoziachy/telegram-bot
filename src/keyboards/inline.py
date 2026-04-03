@@ -31,8 +31,15 @@ def get_paginated_words_kb(words: list, page: int, total_pages: int, prefix: str
     page_words = words[start:end]
 
     for word in page_words:
+        # Решаем, какой язык ставить первым (английский — первый)
+        from src.services.translator import is_russian
+        if is_russian(word.original_text):
+            button_text = f"{word.translated_text} — {word.original_text}"
+        else:
+            button_text = f"{word.original_text} — {word.translated_text}"
+            
         builder.row(InlineKeyboardButton(
-            text=f"{word.original_text} — {word.translated_text}",
+            text=button_text,
             callback_data=f"manage_word:{word.id}:{prefix}:{page}" 
         ))
 
