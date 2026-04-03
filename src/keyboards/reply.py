@@ -18,3 +18,17 @@ def get_learned_menu(counts: dict):
     builder.row(KeyboardButton(text="⬅️ Назад в меню"))
     
     return builder.as_markup(resize_keyboard=True)
+def get_training_quiz_reply_kb(options: list):
+    """Генерирует Reply-кнопки с вариантами ответов (нижнее меню)."""
+    builder = ReplyKeyboardBuilder()
+    
+    # Добавляем 4 варианта (по 2 в ряд)
+    for option in options:
+        builder.add(KeyboardButton(text=option['text']))
+    
+    builder.adjust(2) # Делаем сетку 2x2
+    
+    # Кнопка выхода в самом низу отдельным рядом
+    builder.row(KeyboardButton(text="🏠 В меню"))
+    
+    return builder.as_markup(resize_keyboard=True)

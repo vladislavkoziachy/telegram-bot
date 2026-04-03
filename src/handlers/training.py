@@ -5,12 +5,11 @@ from aiogram.fsm.context import FSMContext
 from src.database.instance import async_session
 from src.database.actions import get_user_words, get_word_by_id
 from src.keyboards.inline import (
-    get_quiz_kb, 
     get_training_type_kb, 
     get_training_pool_kb, 
     get_training_direction_kb
 )
-from src.keyboards.reply import get_main_menu
+from src.keyboards.reply import get_main_menu, get_training_quiz_reply_kb
 from src.services.voice import send_voice_pronunciation
 from src.services.translator import is_russian
 from src.states import Training
@@ -57,6 +56,7 @@ async def handle_direction_choice(callback: types.CallbackQuery, state: FSMConte
     await state.update_data(direction=direction)
     
     await callback.answer("Начинаем!")
+    await callback.message.delete()
     await send_next_question(callback.message, state)
 
 # Функция генерации и отправки вопроса
@@ -70,7 +70,7 @@ async def send_next_question(message: types.Message, state: FSMContext):
     
     if len(words) < 1:
         status_text = "словарном запасе" if pool == "learning" else "списке выученных"
-        await message.answer(f"🤔 В вашем {status_text} пока нет слов. Добавьте слова, чтобы начать!")
+        await message.answer(f"🤔 В вашем {status_text} пока нет слов. Добавьте слова, чтобы начать!", reply_markup=get_main_menu())
         await state.clear()
         return
 
@@ -102,44 +102,46 @@ async def send_next_question(message: types.Message, state: FSMContext):
     
     random.shuffle(options)
 
-    # Сохраняем правильный ответ в состояние
-    await state.update_data(correct_answer=correct_answer)
+    # Сохраняем ПРАВИЛЬНОЕ СЛОВО (текст) и ID в состояние
+    await state.update_data(correct_answer=correct_answer, current_word_id=word.id)
+    await state.set_state(Training.waiting_for_answer)
 
     # Отправляем сообщение
-    msg = await message.answer(
+    await message.answer(
         f"Как переводится: <b>{question_text}</b>?",
-        reply_markup=get_quiz_kb(options, word.id)
+        reply_markup=get_training_quiz_reply_kb(options)
     )
-    
-    if not is_russian(question_text):
-        await send_voice_pronunciation(msg, question_text)
 
-# Остановка тренировки
+# Обработка ответа (ТЕПЕРЬ ЭТО ГЕНЕРАТОР СООБЩЕНИЙ)
+@router.message(Training.waiting_for_answer)
+async def handle_quiz_answer(message: types.Message, state: FSMContext):
+    if message.text == "🏠 В меню":
+        await state.clear()
+        await message.answer("Тренировка окончена. Возвращаемся в меню!", reply_markup=get_main_menu())
+        return
+
+    data = await state.get_data()
+    correct_answer = data.get('correct_answer')
+    word_id = data.get('current_word_id')
+    
+    # Проверяем ответ
+    is_correct = message.text.strip().lower() == correct_answer.strip().lower()
+    
+    async with async_session() as session:
+        word = await get_word_by_id(session, word_id)
+
+    if is_correct:
+        await message.answer(f"✅ <b>Верно!</b>\n{word.original_text} — это {word.translated_text}.")
+    else:
+        await message.answer(f"❌ <b>Почти!</b>\nПравильно: <b>{word.original_text} — {word.translated_text}</b>")
+    
+    # СРАЗУ присылаем СЛЕДУЮЩЕЕ слово
+    await send_next_question(message, state)
+
+# Удалим старые callback-хендлеры квиза
 @router.callback_query(F.data == "train_stop")
-async def stop_training(callback: types.CallbackQuery, state: FSMContext):
+async def stop_training_legacy(callback: types.CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.message.delete()
     await callback.message.answer("Тренировка остановлена. Возвращаемся в меню!", reply_markup=get_main_menu())
     await callback.answer()
-
-# Обработка ответа
-@router.callback_query(F.data.startswith("quiz_"))
-async def handle_quiz_answer(callback: types.CallbackQuery, state: FSMContext):
-    parts = callback.data.split("_")
-    is_correct = parts[1] == "yes"
-    word_id = int(parts[2])
-    
-    async with async_session() as session:
-        word = await get_word_by_id(session, word_id)
-    
-    if not word:
-        await callback.answer("Ошибка: слово исчезло.")
-        return
-
-    # Показываем результат (верно/неверно) коротким алертом
-    feedback = "✅ Круто! Верно." if is_correct else f"❌ Ошибка. Правильно: {word.translated_text}"
-    await callback.answer(feedback, show_alert=False)
-
-    # УДАЛЯЕМ старый вопрос, чтобы чат не превращался в свалку (опционально)
-    # но пользователь просил "слова за словом", так что просто присылаем новое
-    await send_next_question(callback.message, state)
