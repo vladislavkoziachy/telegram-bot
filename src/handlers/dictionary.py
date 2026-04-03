@@ -60,15 +60,11 @@ async def handle_delete(callback: types.CallbackQuery):
     await callback.message.edit_text("🗑 Слово удалено из вашего словаря.")
     await callback.answer()
 
-# Обработка любого текста — если бот в режиме "Добавить слово"
-@router.message(F.text & ~F.text.startswith("/") & ~F.text.in_([
-    "➕ Добавить слово", "📖 Мой словарь", "📚 Выученные", "🎓 Тренировка", "⬅️ Назад в меню"
-]))
+# Обработка ввода слова (Универсальный перехватчик - только вне состояний!)
+@router.message(F.text & ~F.text.startswith("/"), StateFilter(None))
 async def process_word_input(message: types.Message, state: FSMContext):
-    word = message.text.strip()
-    
-    # Пытаемся перевести слово
-    res = translate_text(word)
+    # Если мы не в состоянии ожидания, но сообщение пришло - считаем это за ввод нового слова
+    res = await translate_text(message.text)
     
     if not res:
         await message.answer("🤔 Не удалось перевести это слово. Попробуйте другое!")
