@@ -31,7 +31,6 @@ async def start_add_word(message: types.Message, state: FSMContext):
 @router.message(F.text == "📚 Выученные")
 async def show_learned_menu(message: types.Message):
     async with async_session() as session:
-        # Считаем слова для счетчиков
         uid = message.from_user.id
         counts = {
             "today": await get_words_count(session, uid, "learned", days=1),
@@ -39,40 +38,51 @@ async def show_learned_menu(message: types.Message):
             "all": await get_words_count(session, uid, "learned")
         }
     
-    await message.answer("Раздел выученных слов:", reply_markup=get_learned_menu(counts))
+    await message.answer("📊 <b>Ваша статистика выученных слов:</b>", reply_markup=get_learned_menu(counts))
 
-@router.message(F.text.contains("Выучено за сегодня"))
-async def show_learned_today(message: types.Message):
+# Обработка выбора периода (теперь через общую функцию)
+@router.message(F.text.contains("за сегодняшний день"))
+async def show_today_learned(message: types.Message):
+    await send_learned_page(message, 1, "today")
+
+@router.message(F.text.contains("за эту неделю"))
+async def show_week_learned(message: types.Message):
+    await send_learned_page(message, 1, "week")
+
+@router.message(F.text.contains("за все время"))
+async def show_all_learned(message: types.Message):
+    await send_learned_page(message, 1, "all")
+
+# Пагинация
+@router.callback_query(F.data.startswith("learned_page_"))
+async def handle_learned_pagination(callback: types.CallbackQuery):
+    parts = callback.data.split("_")
+    page = int(parts[2])
+    period = parts[3]
+    
+    await send_learned_page(callback.message, page, period, is_edit=True)
+    await callback.answer()
+
+async def send_learned_page(message: types.Message, page: int, period: str, is_edit: bool = False):
+    days = {"today": 1, "week": 7, "all": None}[period]
+    user_id = message.chat.id
+    
     async with async_session() as session:
-        words = await get_user_words(session, message.from_user.id, "learned", days=1)
+        words = await get_user_words(session, user_id, "learned", days=days)
     
     if not words:
         await message.answer("В этой категории пока пусто.")
         return
-    
-    await message.answer("Слова, закрепленные сегодня:", reply_markup=get_words_list_kb(words))
 
-@router.message(F.text.contains("Выучено за неделю"))
-async def show_learned_week(message: types.Message):
-    async with async_session() as session:
-        words = await get_user_words(session, message.from_user.id, "learned", days=7)
+    total_pages = (len(words) - 1) // 10 + 1
+    kb = get_paginated_words_kb(words, page, total_pages, period)
     
-    if not words:
-        await message.answer("В этой категории пока пусто.")
-        return
+    text = f"📖 <b>Список выученных слов</b>\nПериод: {period}\nСтраница: {page} из {total_pages}"
     
-    await message.answer("Слова, закрепленные за неделю:", reply_markup=get_words_list_kb(words))
-
-@router.message(F.text.contains("Выучено за всё время"))
-async def show_learned_all(message: types.Message):
-    async with async_session() as session:
-        words = await get_user_words(session, message.from_user.id, "learned")
-    
-    if not words:
-        await message.answer("В этой категории пока пусто.")
-        return
-    
-    await message.answer("Ваш список триумфа!", reply_markup=get_words_list_kb(words))
+    if is_edit:
+        await message.edit_text(text, reply_markup=kb)
+    else:
+        await message.answer(text, reply_markup=kb)
 
 @router.message(F.text == "⬅️ Назад в меню")
 async def back_to_main(message: types.Message):

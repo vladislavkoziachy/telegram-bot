@@ -12,9 +12,9 @@ def get_main_menu():
 def get_learned_menu(counts: dict):
     # counts = {"today": 0, "week": 0, "all": 0}
     builder = ReplyKeyboardBuilder()
-    builder.row(KeyboardButton(text=f"📅 Выучено за сегодня ({counts['today']})"))
-    builder.row(KeyboardButton(text=f"📅 Выучено за неделю ({counts['week']})"))
-    builder.row(KeyboardButton(text=f"📅 Выучено за всё время ({counts['all']})"))
+    builder.row(KeyboardButton(text=f"📊 Выученные за сегодняшний день ({counts['today']})"))
+    builder.row(KeyboardButton(text=f"📊 Выученные за эту неделю ({counts['week']})"))
+    builder.row(KeyboardButton(text=f"📊 Выученные за все время ({counts['all']})"))
     builder.row(KeyboardButton(text="⬅️ Назад в меню"))
     
     return builder.as_markup(resize_keyboard=True)

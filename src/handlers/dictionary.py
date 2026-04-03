@@ -129,6 +129,38 @@ async def pronounce_existing_word(callback: types.CallbackQuery):
     await send_voice_pronunciation(callback.message, text_to_speak)
     await callback.answer()
 
+# Управление конкретным словом (показ меню)
+@router.callback_query(F.data.startswith("manage_word_"))
+async def show_word_management(callback: types.CallbackQuery):
+    # Формат: manage_word_ID_PERIOD_PAGE или просто manage_word_ID
+    parts = callback.data.split("_")
+    word_id = int(parts[2])
+    
+    period = parts[3] if len(parts) > 3 else None
+    page = int(parts[4]) if len(parts) > 4 else 1
+
+    async with async_session() as session:
+        word = await get_word_by_id(session, word_id)
+    
+    if not word:
+        await callback.answer("Слово не найдено.")
+        return
+
+    text = f"🔤 <b>Слово:</b> {word.original_text}\n📝 <b>Перевод:</b> {word.translated_text}"
+    
+    await callback.message.edit_text(
+        text, 
+        reply_markup=get_word_manage_kb(word.id, word.status, period, page)
+    )
+    await callback.answer()
+
+# Отмена добавления
+@router.callback_query(F.data == "cancel_add")
+async def cancel_add_word(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.edit_text("❌ Добавление отменено.")
+    await state.clear()
+    await callback.answer()
+
 # Подтверждение добавления (через Inline кнопку)
 @router.callback_query(F.data == "confirm_add")
 async def confirm_add_word(callback: types.CallbackQuery, state: FSMContext):
@@ -140,11 +172,5 @@ async def confirm_add_word(callback: types.CallbackQuery, state: FSMContext):
         f"✅ Добавлено! <b>{data['original']}</b> — это <b>{data['translated']}</b>"
     )
     await state.clear()
-    await callback.answer()
-
-# Отмена добавления
-@router.callback_query(F.data == "cancel_add")
-async def cancel_add_word(callback: types.CallbackQuery, state: FSMContext):
-    await callback.message.edit_text("❌ Добавление отменено.")
     await state.clear()
     await callback.answer()
