@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from src.database.instance import async_session
 from src.database.actions import get_or_create_user, get_words_count, get_user_words
 from src.keyboards.reply import get_main_menu, get_learned_menu
-from src.keyboards.inline import get_words_list_kb
+from src.keyboards.inline import get_paginated_words_kb
 from src.states import AddWord
 
 router = Router()
@@ -54,13 +54,21 @@ async def show_all_learned(message: types.Message):
     await send_learned_page(message, 1, "all")
 
 # Пагинация
-@router.callback_query(F.data.startswith("learned_page_"))
-async def handle_learned_pagination(callback: types.CallbackQuery):
-    parts = callback.data.split("_")
-    page = int(parts[2])
-    period = parts[3]
+@router.callback_query(F.data.startswith("page:"))
+async def handle_pagination(callback: types.CallbackQuery):
+    # Формат: page:1:learned:today
+    parts = callback.data.split(":")
+    page = int(parts[1])
+    prefix = parts[2]
     
-    await send_learned_page(callback.message, page, period, is_edit=True)
+    if prefix.startswith("learned:"):
+        period = prefix.split(":")[1]
+        await send_learned_page(callback.message, page, period, is_edit=True)
+    elif prefix == "dict":
+        # Передадим управление в другой хендлер или обработаем здесь
+        from src.handlers.dictionary import send_dict_page
+        await send_dict_page(callback.message, page, is_edit=True)
+    
     await callback.answer()
 
 async def send_learned_page(message: types.Message, page: int, period: str, is_edit: bool = False):
@@ -75,7 +83,8 @@ async def send_learned_page(message: types.Message, page: int, period: str, is_e
         return
 
     total_pages = (len(words) - 1) // 10 + 1
-    kb = get_paginated_words_kb(words, page, total_pages, period)
+    # Используем префикс learned:today для кнопок
+    kb = get_paginated_words_kb(words, page, total_pages, f"learned:{period}")
     
     text = f"📖 <b>Список выученных слов</b>\nПериод: {period}\nСтраница: {page} из {total_pages}"
     

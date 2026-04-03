@@ -21,8 +21,8 @@ def get_quiz_kb(options: list, word_id: int):
     builder.row(InlineKeyboardButton(text="🏠 В меню", callback_data="train_stop"))
     return builder.as_markup()
 
-def get_paginated_words_kb(words: list, page: int, total_pages: int, period: str):
-    """Генерирует список слов с кнопками пагинации."""
+def get_paginated_words_kb(words: list, page: int, total_pages: int, prefix: str):
+    """Генерирует список слов с кнопками пагинации (универсальная)."""
     builder = InlineKeyboardBuilder()
     
     # Показываем по 10 слов на странице
@@ -33,40 +33,39 @@ def get_paginated_words_kb(words: list, page: int, total_pages: int, period: str
     for word in page_words:
         builder.row(InlineKeyboardButton(
             text=f"{word.original_text} — {word.translated_text}",
-            callback_data=f"manage_word_{word.id}_{period}_{page}" # Сохраняем контекст возврата
+            callback_data=f"manage_word:{word.id}:{prefix}:{page}" 
         ))
 
     # Кнопки навигации
     nav_buttons = []
     if page > 1:
-        nav_buttons.append(InlineKeyboardButton(text="⬅️ Пред.", callback_data=f"learned_page_{page-1}_{period}"))
+        nav_buttons.append(InlineKeyboardButton(text="⬅️ Пред.", callback_data=f"page:{page-1}:{prefix}"))
     
-    # Кнопка с номером страницы (не нажимается)
     nav_buttons.append(InlineKeyboardButton(text=f"{page}/{total_pages}", callback_data="ignore"))
 
     if page < total_pages:
-        nav_buttons.append(InlineKeyboardButton(text="След. ➡️", callback_data=f"learned_page_{page+1}_{period}"))
+        nav_buttons.append(InlineKeyboardButton(text="След. ➡️", callback_data=f"page:{page+1}:{prefix}"))
     
     if nav_buttons:
         builder.row(*nav_buttons)
         
     return builder.as_markup()
 
-def get_word_manage_kb(word_id: int, current_status: str, back_period: str = None, back_page: int = 1):
+def get_word_manage_kb(word_id: int, current_status: str, back_prefix: str = None, back_page: int = 1):
     buttons = []
-    buttons.append([InlineKeyboardButton(text="🔊 Прослушать", callback_data=f"pronounce_word_{word_id}")])
+    buttons.append([InlineKeyboardButton(text="🔊 Прослушать", callback_data=f"pronounce_word:{word_id}")])
     
     if current_status == "learning":
-        buttons.append([InlineKeyboardButton(text="✅ Я выучил!", callback_data=f"set_learned_{word_id}")])
+        buttons.append([InlineKeyboardButton(text="✅ Я выучил!", callback_data=f"set_learned:{word_id}")])
     else:
-        buttons.append([InlineKeyboardButton(text="📖 Вернуть в словарь", callback_data=f"set_learning_{word_id}")])
+        buttons.append([InlineKeyboardButton(text="📖 Вернуть в словарь", callback_data=f"set_learning:{word_id}")])
     
     # Кнопка удаления
-    buttons.append([InlineKeyboardButton(text="🗑 Удалить", callback_data=f"delete_word_{word_id}")])
+    buttons.append([InlineKeyboardButton(text="🗑 Удалить", callback_data=f"delete_word:{word_id}")])
     
-    # Кнопка возврата к списку (если пришли из Выученных)
-    if back_period:
-        buttons.append([InlineKeyboardButton(text="🔙 Назад к списку", callback_data=f"learned_page_{back_page}_{back_period}")])
+    # Кнопка возврата к списку
+    if back_prefix:
+        buttons.append([InlineKeyboardButton(text="🔙 Назад к списку", callback_data=f"page:{back_page}:{back_prefix}")])
         
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
