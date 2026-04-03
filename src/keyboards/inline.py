@@ -21,15 +21,15 @@ def get_words_list_kb(words: list):
     return builder.as_markup()
 
 def get_quiz_kb(options: list, word_id: int):
-    """Генерирует кнопки с вариантами ответов."""
+    """Генерирует кнопки с вариантами ответов + кнопку выхода."""
     builder = InlineKeyboardBuilder()
     for option in options:
-        # callback_data будет содержать: answer_ПОДТВЕРЖДЕНИЕ_IDСЛОВА
-        # Если это правильный ответ, пометим его 'correct'
         builder.row(InlineKeyboardButton(
             text=option['text'], 
             callback_data=f"quiz_{option['is_correct']}_{word_id}"
         ))
+    # Пятая кнопка - выход в меню
+    builder.row(InlineKeyboardButton(text="🏠 В меню", callback_data="train_stop"))
     return builder.as_markup()
 
 def get_word_manage_kb(word_id: int, current_status: str):

@@ -23,7 +23,7 @@ async def start_training_config(message: types.Message, state: FSMContext):
     await state.clear()
     await state.set_state(Training.choosing_type)
     await message.answer(
-        "🌟 <b>Настройка тренировки</b>\n\nВыбери тип упражнения:",
+        "🎯 <b>Выберите тренировку:</b>",
         reply_markup=get_training_type_kb()
     )
 
@@ -32,20 +32,20 @@ async def start_training_config(message: types.Message, state: FSMContext):
 async def handle_type_choice(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(Training.choosing_pool)
     await callback.message.edit_text(
-        "📂 <b>Откуда берем слова?</b>",
+        "📂 <b>Какие слова будем тренировать?</b>",
         reply_markup=get_training_pool_kb()
     )
     await callback.answer()
 
-# 2. Обработка выбора папки (Словарь или Выученные)
+# 2. Обработка выбора папки
 @router.callback_query(F.data.startswith("train_pool_"), Training.choosing_pool)
 async def handle_pool_choice(callback: types.CallbackQuery, state: FSMContext):
-    pool = callback.data.replace("train_pool_", "") # 'learning' или 'learned'
+    pool = callback.data.replace("train_pool_", "")
     await state.update_data(pool=pool)
     
     await state.set_state(Training.choosing_direction)
     await callback.message.edit_text(
-        "🔄 <b>Направление перевода:</b>",
+        "🔄 <b>Выбери режим перевода (RU EN / EN RU / MIX):</b>",
         reply_markup=get_training_direction_kb()
     )
     await callback.answer()
@@ -53,7 +53,7 @@ async def handle_pool_choice(callback: types.CallbackQuery, state: FSMContext):
 # 3. Обработка направления и ЗАПУСК квиза
 @router.callback_query(F.data.startswith("train_dir_"), Training.choosing_direction)
 async def handle_direction_choice(callback: types.CallbackQuery, state: FSMContext):
-    direction = callback.data.replace("train_dir_", "") # 'ru_en', 'en_ru', 'mix'
+    direction = callback.data.replace("train_dir_", "")
     await state.update_data(direction=direction)
     
     await callback.answer("Начинаем!")
@@ -77,27 +77,23 @@ async def send_next_question(message: types.Message, state: FSMContext):
     # Выбираем случайное слово
     word = random.choice(words)
     
-    # Определяем направление для ЭТОГО вопроса (важно для 'mix')
+    # Определяем направление для ЭТОГО вопроса
     current_dir = direction
     if direction == "mix":
         current_dir = random.choice(["ru_en", "en_ru"])
     
-    # Настраиваем вопрос и правильный ответ в зависимости от направления
     if current_dir == "en_ru":
-        # Вопрос на английском, ответ на русском
-        question_text = word.translated_text if is_russian(word.translated_text) else word.original_text
-        if is_russian(word.original_text): # Если оригинал внезапно русский
+        if is_russian(word.original_text):
              question_text, correct_answer = word.translated_text, word.original_text
         else:
              question_text, correct_answer = word.original_text, word.translated_text
     else:
-        # Вопрос на русском, ответ на английском (ru_en)
         if is_russian(word.original_text):
             question_text, correct_answer = word.original_text, word.translated_text
         else:
             question_text, correct_answer = word.translated_text, word.original_text
 
-    # Генерируем варианты (правильный + 3 фейка)
+    # Генерируем варианты
     options = [{"text": correct_answer, "is_correct": "yes"}]
     decoys = ["Apple", "Book", "House", "Car", "Sun", "Water", "Friend", "Sky", "Table"]
     random.shuffle(decoys)
@@ -106,7 +102,7 @@ async def send_next_question(message: types.Message, state: FSMContext):
     
     random.shuffle(options)
 
-    # Сохраняем правильный ответ в состояние, чтобы проверить при клике
+    # Сохраняем правильный ответ в состояние
     await state.update_data(correct_answer=correct_answer)
 
     # Отправляем сообщение
@@ -115,9 +111,16 @@ async def send_next_question(message: types.Message, state: FSMContext):
         reply_markup=get_quiz_kb(options, word.id)
     )
     
-    # Озвучка, если вопрос на английском
     if not is_russian(question_text):
         await send_voice_pronunciation(msg, question_text)
+
+# Остановка тренировки
+@router.callback_query(F.data == "train_stop")
+async def stop_training(callback: types.CallbackQuery, state: FSMContext):
+    await state.clear()
+    await callback.message.delete()
+    await callback.message.answer("Тренировка остановлена. Возвращаемся в меню!", reply_markup=get_main_menu())
+    await callback.answer()
 
 # Обработка ответа
 @router.callback_query(F.data.startswith("quiz_"))
@@ -133,18 +136,10 @@ async def handle_quiz_answer(callback: types.CallbackQuery, state: FSMContext):
         await callback.answer("Ошибка: слово исчезло.")
         return
 
-    if is_correct:
-        await callback.message.edit_text(
-            f"✅ <b>Верно!</b>\n{word.original_text} — это {word.translated_text}."
-        )
-    else:
-        await callback.message.edit_text(
-            f"❌ <b>Почти!</b>\nПравильно: <b>{word.original_text} — {word.translated_text}</b>"
-        )
-    
-    await callback.answer()
-    
-    # Возвращаемся в меню или предлагаем продолжить?
-    # Пока вернем главное меню
-    await callback.message.answer("Тренировка завершена! Хотите еще?", reply_markup=get_main_menu())
-    await state.clear()
+    # Показываем результат (верно/неверно) коротким алертом
+    feedback = "✅ Круто! Верно." if is_correct else f"❌ Ошибка. Правильно: {word.translated_text}"
+    await callback.answer(feedback, show_alert=False)
+
+    # УДАЛЯЕМ старый вопрос, чтобы чат не превращался в свалку (опционально)
+    # но пользователь просил "слова за словом", так что просто присылаем новое
+    await send_next_question(callback.message, state)
