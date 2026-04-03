@@ -1,7 +1,8 @@
 import os
+import asyncio
+import uuid
 from gtts import gTTS
 from aiogram import types
-import uuid
 
 async def send_voice_pronunciation(message: types.Message, text: str):
     """Генерирует и отправляет голосовое сообщение с английским произношением."""
@@ -9,9 +10,9 @@ async def send_voice_pronunciation(message: types.Message, text: str):
     filename = f"voice_{uuid.uuid4()}.mp3"
     
     try:
-        # Генерируем аудио (всегда на английском)
+        # Генерируем аудио (всегда на английском) в отдельном потоке
         tts = gTTS(text=text, lang='en')
-        tts.save(filename)
+        await asyncio.to_thread(tts.save, filename)
         
         # Отправляем аудио из файла
         voice_file = types.FSInputFile(filename)
@@ -22,4 +23,7 @@ async def send_voice_pronunciation(message: types.Message, text: str):
     finally:
         # Удаляем временный файл, если он существует
         if os.path.exists(filename):
-            os.remove(filename)
+            try:
+                os.remove(filename)
+            except:
+                pass
