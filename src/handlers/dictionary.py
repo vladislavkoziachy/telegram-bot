@@ -29,9 +29,32 @@ async def send_dict_page(message: types.Message, page: int, is_edit: bool = Fals
     if not words:
         return
     
+    # Управление конкретным словом (показ меню)
+@router.callback_query(F.data.startswith("manage_word:"))
+async def show_word_management(callback: types.CallbackQuery):
+    # Формат: manage_word:ID:PREFIX:PAGE
+    parts = callback.data.split(":")
+    
+    if len(parts) < 4:
+        await callback.answer("Ошибка данных кнопки.")
+        return
+
+    word_id = int(parts[1])
+    prefix = parts[2]
+    page = int(parts[3])
+
+    async with async_session() as session:
+        word = await get_word_by_id(session, word_id)
+    
+    if not word:
+        await callback.answer("Слово не найдено.")
+        return
+
+    text = f"🔤 <b>Слово:</b> {word.original_text}\n📝 <b>Перевод:</b> {word.translated_text}"
+    
     await callback.message.edit_text(
-        f"Управление словом: <b>{word.original_text}</b> — <b>{word.translated_text}</b>",
-        reply_markup=get_word_manage_kb(word.id, word.status)
+        text, 
+        reply_markup=get_word_manage_kb(word.id, word.status, prefix, page)
     )
     await callback.answer()
 

@@ -61,8 +61,8 @@ async def handle_pagination(callback: types.CallbackQuery):
     page = int(parts[1])
     prefix = parts[2]
     
-    if prefix.startswith("learned:"):
-        period = prefix.split(":")[1]
+    if prefix.startswith("learned_"):
+        period = prefix.split("_")[1]
         await send_learned_page(callback.message, page, period, is_edit=True)
     elif prefix == "dict":
         # Передадим управление в другой хендлер или обработаем здесь
@@ -83,8 +83,8 @@ async def send_learned_page(message: types.Message, page: int, period: str, is_e
         return
 
     total_pages = (len(words) - 1) // 10 + 1
-    # Используем префикс learned:today для кнопок
-    kb = get_paginated_words_kb(words, page, total_pages, f"learned:{period}")
+    # Используем префикс learned_today (через _) для кнопок
+    kb = get_paginated_words_kb(words, page, total_pages, f"learned_{period}")
     
     text = f"📖 <b>Список выученных слов</b>\nПериод: {period}\nСтраница: {page} из {total_pages}"
     
