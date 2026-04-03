@@ -55,3 +55,12 @@ async def update_word_status(session: AsyncSession, word_id: int, new_status: st
 async def get_word_by_id(session: AsyncSession, word_id: int):
     result = await session.execute(select(Word).where(Word.id == word_id))
     return result.scalar_one_or_none()
+
+async def get_word_by_text(session: AsyncSession, user_id: int, text: str):
+    """Поиск слова по тексту (игнорируя регистр)."""
+    query = select(Word).where(
+        Word.user_id == user_id,
+        func.lower(Word.original_text) == func.lower(text)
+    )
+    result = await session.execute(query)
+    return result.scalar_one_or_none()

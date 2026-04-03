@@ -4,7 +4,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter
 
 from src.database.instance import async_session
-from src.database.actions import add_word, get_user_words, get_word_by_id, delete_word, update_word_status
+from src.database.actions import (
+    add_word, get_user_words, get_word_by_id, 
+    delete_word, update_word_status, get_word_by_text
+)
 from src.services.translator import translate_text, is_russian
 from src.services.voice import send_voice_pronunciation
 from src.keyboards.inline import (
@@ -163,12 +166,6 @@ async def cancel_add_word(callback: types.CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "confirm_add")
 async def confirm_add_word(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    async with async_session() as session:
-        await add_word(session, callback.from_user.id, data['original'], data['translated'])
-    
-    await callback.message.edit_text(
-        f"✅ Добавлено! <b>{data['original']}</b> — это <b>{data['translated']}</b>"
-    )
     await state.clear()
     await state.clear()
     await callback.answer()
