@@ -33,7 +33,7 @@ async def send_dict_page(message: types.Message, page: int, is_edit: bool = Fals
         await message.answer("📝 В вашем словаре пока нет слов. Напишите любое слово, чтобы добавить его!")
         return
 
-    total_pages = (len(words) - 1) // 10 + 1
+    total_pages = (len(words) - 1) // 6 + 1
     kb = get_paginated_words_kb(words, page, total_pages, "dict")
     
     text = f"📖 <b>Ваш словарь (в процессе изучения)</b>\nСтраница: {page} из {total_pages}"

@@ -25,9 +25,9 @@ def get_paginated_words_kb(words: list, page: int, total_pages: int, prefix: str
     """Генерирует список слов с кнопками пагинации (универсальная)."""
     builder = InlineKeyboardBuilder()
     
-    # Показываем по 10 слов на странице
-    start = (page - 1) * 10
-    end = start + 10
+    # Показываем по 6 слов на странице
+    start = (page - 1) * 6
+    end = start + 6
     page_words = words[start:end]
 
     for word in page_words:

@@ -82,7 +82,7 @@ async def send_learned_page(message: types.Message, page: int, period: str, is_e
         await message.answer("В этой категории пока пусто.")
         return
 
-    total_pages = (len(words) - 1) // 10 + 1
+    total_pages = (len(words) - 1) // 6 + 1
     # Используем префикс learned_today (через _) для кнопок
     kb = get_paginated_words_kb(words, page, total_pages, f"learned_{period}")
     

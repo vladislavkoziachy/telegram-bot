@@ -39,6 +39,9 @@ async def get_user_words(session: AsyncSession, user_id: int, status: str, days:
         since = datetime.utcnow() - timedelta(days=days)
         query = query.where(Word.created_at >= since)
     
+    # Сортировка: от новых к старым
+    query = query.order_by(Word.created_at.desc())
+    
     result = await session.execute(query)
     return result.scalars().all()
 
