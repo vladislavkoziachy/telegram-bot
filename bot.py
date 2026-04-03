@@ -34,10 +34,10 @@ def main() -> None:
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()
 
-    # Регистрируем роутеры
+    # Регистрируем роутеры (ПОРЯДОК ВАЖЕН!)
     dp.include_router(common.router)
-    dp.include_router(training.router)
     dp.include_router(dictionary.router)
+    dp.include_router(training.router)
 
     # При событии запуска (startup) вызываем нашу функцию
     dp.startup.register(on_startup)

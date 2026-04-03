@@ -50,82 +50,7 @@ async def add_word_start(message: types.Message, state: FSMContext):
     await state.set_state(AddWord.waiting_for_word)
     await message.answer("Введите слово на английском или русском языке:")
 
-# Озвучка слова из базы
-@router.callback_query(F.data.startswith("pronounce_word:"))
-async def pronounce_existing_word(callback: types.CallbackQuery):
-    word_id = int(callback.data.split(":")[1])
-    
-    async with async_session() as session:
-        word = await get_word_by_id(session, word_id)
-    
-    if not word:
-        await callback.answer("Слово не найдено.")
-        return
-
-    text_to_speak = word.translated_text if is_russian(word.original_text) else word.original_text
-    await send_voice_pronunciation(callback.message, text_to_speak)
-    await callback.answer()
-
-# Управление конкретным словом (показ меню)
-@router.callback_query(F.data.startswith("manage_word:"))
-async def show_word_management(callback: types.CallbackQuery):
-    # Формат: manage_word:ID:PREFIX:PAGE
-    parts = callback.data.split(":")
-    
-    if len(parts) < 4:
-        await callback.answer("Ошибка данных кнопки.")
-        return
-
-    word_id = int(parts[1])
-    prefix = parts[2]
-    page = int(parts[3])
-
-    async with async_session() as session:
-        word = await get_word_by_id(session, word_id)
-    
-    if not word:
-        await callback.answer("Слово не найдено.")
-        return
-
-    # Заголовок управления словом (EN - RU)
-    title_text = f"{word.translated_text} — {word.original_text}" if is_russian(word.original_text) else f"{word.original_text} — {word.translated_text}"
-    text = f"🔤 <b>Слово:</b> {title_text}"
-    
-    await callback.message.edit_text(
-        text, 
-        reply_markup=get_word_manage_kb(word.id, word.status, prefix, page)
-    )
-    await callback.answer()
-
-# Изменение статуса (Выучил / Вернуть)
-@router.callback_query(F.data.startswith("set_learned:") | F.data.startswith("set_learning:"))
-async def change_status(callback: types.CallbackQuery):
-    # data: set_learned:ID
-    parts = callback.data.split(":")
-    new_status = parts[0].replace("set_", "")
-    word_id = int(parts[1])
-    
-    async with async_session() as session:
-        await update_word_status(session, word_id, new_status)
-        await session.commit()
-    
-    status_msg = "✅ Перенесено в 'Выученные'" if new_status == "learned" else "📖 Возвращено в 'Словарь'"
-    await callback.message.edit_text(status_msg)
-    await callback.answer()
-
-# Удаление слова
-@router.callback_query(F.data.startswith("delete_word:"))
-async def handle_delete(callback: types.CallbackQuery):
-    word_id = int(callback.data.split(":")[1])
-    
-    async with async_session() as session:
-        await delete_word(session, word_id)
-        await session.commit()
-    
-    await callback.message.edit_text("🗑 Слово удалено из вашего словаря.")
-    await callback.answer()
-
-# Обработка ввода слова (Универсальный перехватчик)
+# Обработка ввода слова (Универсальный перехватчик) - ВЫСОКИЙ ПРИОРИТЕТ
 @router.message(
     F.text & ~F.text.startswith("/") & 
     ~F.text.in_([
@@ -149,6 +74,72 @@ async def process_word_input(message: types.Message, state: FSMContext):
         reply_markup=get_add_word_confirm_kb()
     )
 
+# Озвучка слова из базы
+@router.callback_query(F.data.startswith("pronounce_word:"))
+async def pronounce_existing_word(callback: types.CallbackQuery):
+    word_id = int(callback.data.split(":")[1])
+    
+    async with async_session() as session:
+        word = await get_word_by_id(session, word_id)
+    
+    if not word:
+        await callback.answer("Слово не найдено.")
+        return
+
+    text_to_speak = word.translated_text if is_russian(word.original_text) else word.original_text
+    await send_voice_pronunciation(callback.message, text_to_speak)
+    await callback.answer()
+
+# Управление конкретным словом (меню)
+@router.callback_query(F.data.startswith("manage_word:"))
+async def show_word_management(callback: types.CallbackQuery):
+    # Формат: manage_word:ID:PREFIX:PAGE
+    parts = callback.data.split(":")
+    word_id, prefix, page = int(parts[1]), parts[2], int(parts[3])
+
+    async with async_session() as session:
+        word = await get_word_by_id(session, word_id)
+    
+    if not word:
+        await callback.answer("Слово не найдено.")
+        return
+
+    # Заголовок управления словом (EN - RU)
+    title = f"{word.translated_text} — {word.original_text}" if is_russian(word.original_text) else f"{word.original_text} — {word.translated_text}"
+    text = f"🔤 <b>Слово:</b> {title}"
+    
+    await callback.message.edit_text(
+        text, 
+        reply_markup=get_word_manage_kb(word.id, word.status, prefix, page)
+    )
+    await callback.answer()
+
+# Изменение статуса
+@router.callback_query(F.data.startswith("set_learned:") | F.data.startswith("set_learning:"))
+async def change_status(callback: types.CallbackQuery):
+    parts = callback.data.split(":")
+    new_status, word_id = parts[0].replace("set_", ""), int(parts[1])
+    
+    async with async_session() as session:
+        await update_word_status(session, word_id, new_status)
+        await session.commit()
+    
+    msg = "✅ Перенесено в 'Выученные'" if new_status == "learned" else "📖 Возвращено в 'Словарь'"
+    await callback.message.edit_text(msg)
+    await callback.answer()
+
+# Удаление слова
+@router.callback_query(F.data.startswith("delete_word:"))
+async def handle_delete(callback: types.CallbackQuery):
+    word_id = int(callback.data.split(":")[1])
+    
+    async with async_session() as session:
+        await delete_word(session, word_id)
+        await session.commit()
+    
+    await callback.message.edit_text("🗑 Слово удалено.")
+    await callback.answer()
+
 # Озвучка нового слова
 @router.callback_query(F.data == "pronounce_new")
 async def pronounce_new_word(callback: types.CallbackQuery, state: FSMContext):
@@ -156,6 +147,7 @@ async def pronounce_new_word(callback: types.CallbackQuery, state: FSMContext):
     if not data:
         await callback.answer("Ошибка: данные не найдены.")
         return
+    
     text_to_speak = data['translated'] if is_russian(data['original']) else data['original']
     await send_voice_pronunciation(callback.message, text_to_speak)
     await callback.answer()

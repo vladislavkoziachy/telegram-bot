@@ -23,11 +23,6 @@ async def cmd_start(message: types.Message, state: FSMContext):
         reply_markup=get_main_menu()
     )
 
-@router.message(F.text == "➕ Добавить слово")
-async def start_add_word(message: types.Message, state: FSMContext):
-    await state.set_state(AddWord.waiting_for_word)
-    await message.answer("Введите слово на английском или русском языке:")
-
 @router.message(F.text == "📚 Выученные")
 async def show_learned_menu(message: types.Message):
     async with async_session() as session:
