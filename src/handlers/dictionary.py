@@ -44,6 +44,12 @@ async def send_dict_page(message: types.Message, page: int, is_edit: bool = Fals
     else:
         await message.answer(text, reply_markup=kb)
 
+# Режим добавления слова (через кнопку)
+@router.message(F.text == "➕ Добавить слово")
+async def add_word_start(message: types.Message, state: FSMContext):
+    await state.set_state(AddWord.waiting_for_word)
+    await message.answer("Введите слово на английском или русском языке:")
+
 # Озвучка слова из базы
 @router.callback_query(F.data.startswith("pronounce_word:"))
 async def pronounce_existing_word(callback: types.CallbackQuery):
@@ -81,7 +87,9 @@ async def show_word_management(callback: types.CallbackQuery):
         await callback.answer("Слово не найдено.")
         return
 
-    text = f"🔤 <b>Слово:</b> {word.original_text}\n📝 <b>Перевод:</b> {word.translated_text}"
+    # Заголовок управления словом (EN - RU)
+    title_text = f"{word.translated_text} — {word.original_text}" if is_russian(word.original_text) else f"{word.original_text} — {word.translated_text}"
+    text = f"🔤 <b>Слово:</b> {title_text}"
     
     await callback.message.edit_text(
         text, 
@@ -117,7 +125,7 @@ async def handle_delete(callback: types.CallbackQuery):
     await callback.message.edit_text("🗑 Слово удалено из вашего словаря.")
     await callback.answer()
 
-# Обработка ввода слова (Универсальный перехватчик - вне тренировки)
+# Обработка ввода слова (Универсальный перехватчик)
 @router.message(
     F.text & ~F.text.startswith("/") & 
     ~F.text.in_([
@@ -127,14 +135,13 @@ async def handle_delete(callback: types.CallbackQuery):
     StateFilter(None, AddWord.waiting_for_word)
 )
 async def process_word_input(message: types.Message, state: FSMContext):
-    # Если мы не в состоянии ожидания, но сообщение пришло - считаем это за ввод нового слова
     res = await translate_text(message.text)
     
     if not res:
         await message.answer("🤔 Не удалось перевести это слово. Попробуйте другое!")
         return
 
-    # Сохраняем во временное состояние для подтверждения
+    # Сохраняем во временное состояние
     await state.update_data(original=res['original'], translated=res['translated'])
     
     await message.answer(
@@ -142,17 +149,14 @@ async def process_word_input(message: types.Message, state: FSMContext):
         reply_markup=get_add_word_confirm_kb()
     )
 
-# Озвучка нового слова (которое еще не в базе)
+# Озвучка нового слова
 @router.callback_query(F.data == "pronounce_new")
 async def pronounce_new_word(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     if not data:
         await callback.answer("Ошибка: данные не найдены.")
         return
-    
-    # Решаем, что озвучить (английскую версию)
     text_to_speak = data['translated'] if is_russian(data['original']) else data['original']
-    
     await send_voice_pronunciation(callback.message, text_to_speak)
     await callback.answer()
 
@@ -163,10 +167,26 @@ async def cancel_add_word(callback: types.CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.answer()
 
-# Подтверждение добавления (через Inline кнопку)
+# Подтверждение добавления
 @router.callback_query(F.data == "confirm_add")
 async def confirm_add_word(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    await state.clear()
+    user_id = callback.from_user.id
+    original = data['original']
+    
+    async with async_session() as session:
+        # Проверка на дубликаты
+        existing_word = await get_word_by_text(session, user_id, original)
+        if existing_word:
+            status_text = "в словаре" if existing_word.status == "learning" else "в списке выученных"
+            await callback.message.edit_text(f"⚠️ Слово <b>{original}</b> уже есть {status_text}!")
+            await state.clear()
+            await callback.answer()
+            return
+            
+        await add_word(session, user_id, original, data['translated'])
+        await session.commit()
+    
+    await callback.message.edit_text(f"✅ Добавлено! <b>{data['original']}</b> — это <b>{data['translated']}</b>")
     await state.clear()
     await callback.answer()
