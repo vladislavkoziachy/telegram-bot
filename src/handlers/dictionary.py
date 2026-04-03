@@ -62,7 +62,14 @@ async def handle_delete(callback: types.CallbackQuery):
     await callback.answer()
 
 # Обработка ввода слова (Универсальный перехватчик - вне тренировки)
-@router.message(F.text & ~F.text.startswith("/"), StateFilter(None, AddWord.waiting_for_word))
+@router.message(
+    F.text & ~F.text.startswith("/") & 
+    ~F.text.in_([
+        "🎓 Тренировка", "📖 Мой словарь", "📚 Выученные", "➕ Добавить слово", "⬅️ Назад в меню",
+        "📊 Выученные за сегодняшний день", "📊 Выученные за эту неделю", "📊 Выученные за все время"
+    ]),
+    StateFilter(None, AddWord.waiting_for_word)
+)
 async def process_word_input(message: types.Message, state: FSMContext):
     # Если мы не в состоянии ожидания, но сообщение пришло - считаем это за ввод нового слова
     res = await translate_text(message.text)

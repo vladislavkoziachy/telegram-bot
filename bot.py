@@ -33,8 +33,8 @@ def main() -> None:
 
     # Регистрируем роутеры
     dp.include_router(common.router)
+    dp.include_router(training.router) # ТРЕНИРОВКА ТЕПЕРЬ ПРИОРИТЕТНЕЕ
     dp.include_router(dictionary.router)
-    dp.include_router(training.router)
 
     # При событии запуска (startup) вызываем нашу функцию
     dp.startup.register(on_startup)
