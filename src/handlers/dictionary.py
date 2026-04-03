@@ -1,6 +1,7 @@
 import random
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
+from aiogram.filters import StateFilter
 
 from src.database.instance import async_session
 from src.database.actions import add_word, get_user_words, get_word_by_id, delete_word, update_word_status
@@ -60,8 +61,8 @@ async def handle_delete(callback: types.CallbackQuery):
     await callback.message.edit_text("🗑 Слово удалено из вашего словаря.")
     await callback.answer()
 
-# Обработка ввода слова (Универсальный перехватчик - только вне состояний!)
-@router.message(F.text & ~F.text.startswith("/"), StateFilter(None))
+# Обработка ввода слова (Универсальный перехватчик - вне тренировки)
+@router.message(F.text & ~F.text.startswith("/"), StateFilter(None, AddWord.waiting_for_word))
 async def process_word_input(message: types.Message, state: FSMContext):
     # Если мы не в состоянии ожидания, но сообщение пришло - считаем это за ввод нового слова
     res = await translate_text(message.text)
