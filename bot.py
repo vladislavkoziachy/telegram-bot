@@ -23,6 +23,9 @@ async def on_startup(bot: Bot) -> None:
     print(f"Установка вебхука на: {WEBHOOK_URL}")
     await bot.set_webhook(WEBHOOK_URL, drop_pending_updates=True)
 
+async def index(request):
+    return web.Response(text="Bot is running!")
+
 def main() -> None:
     # Настройка логирования
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
@@ -33,7 +36,7 @@ def main() -> None:
 
     # Регистрируем роутеры
     dp.include_router(common.router)
-    dp.include_router(training.router) # ТРЕНИРОВКА ТЕПЕРЬ ПРИОРИТЕТНЕЕ
+    dp.include_router(training.router)
     dp.include_router(dictionary.router)
 
     # При событии запуска (startup) вызываем нашу функцию
@@ -41,6 +44,7 @@ def main() -> None:
 
     # Создаем aiohttp приложение
     app = web.Application()
+    app.router.add_get("/", index)
 
     # Настраиваем обработчик вебхуков
     webhook_requests_handler = SimpleRequestHandler(
